@@ -89,4 +89,8 @@ Problems
 
 Install plugin for IDEA - Protocol Buffer Editor from Jeremy Volkman
 
+#####  8. Proto - A Simple Person Message Creation
 
+-  `mvn compile`
+-  target - protoc-plugins - protoc-3.6.1-windows-x86_64.exe
+-  target - generated-sources - protobuf - java - PersonOuterClass.java
