@@ -3,6 +3,10 @@ package net.shyshkin.study.grpc.protobuf.models;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class PersonTest {
@@ -39,5 +43,24 @@ class PersonTest {
         //then
         assertEquals(person1, person2);
         assertEquals(person1.hashCode(), person2.hashCode());
+    }
+
+    @Test
+    void serializationDeserialization() throws IOException {
+        //given
+        Person person = Person.newBuilder()
+                .setName("Art")
+                .setAge(38)
+                .build();
+        Path tempFile = Files.createTempFile("person", "ser");
+        Files.write(tempFile, person.toByteArray());
+
+        //when
+        byte[] personFileContent = Files.readAllBytes(tempFile);
+        Person savedPerson = Person.parseFrom(personFileContent);
+
+        //then
+        assertEquals(person, savedPerson);
+        Files.delete(tempFile);
     }
 }
