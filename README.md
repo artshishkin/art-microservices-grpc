@@ -58,5 +58,33 @@ Problems
         -  Auto-generated bindings for multiple languages
     -  Great for mobile apps    
     
+#####  3. gRPC-vs-REST - Performance Comparison
+
+1.  Start microservices
+    -  use [docker-compose.yml](Section%201%20-%20Introduction/gRPC-vs-REST/docker-compose.yml)
+    -  `docker-compose up`
+2.  Endpoints for testing    
+    -  REST
+        -  `/rest/unary/1000`
+    -  gRPC    
+        -  `/grpc/unary/1000`
+        -  `/grpc/stream/1000`
+3.  Curl
+    -  `curl localhost:8080/rest/unary/1000` - 1.78s
+    -  `curl localhost:8080/grpc/unary/1000` - 1.08s
+    -  `curl localhost:8080/grpc/stream/1000` - 346ms    
+4.  Apache Benchmark Commands
+    -  `ab -n 1000 -c 100 localhost:8080/rest/unary/1000`
+        -  too many Failed requests with Exception
+            -  `java.lang.RuntimeException: oops at com.vinsguru.rest.service.RestSquareService.getSquareUnary(RestSquareService.java:19)` 
+        -  Result:  [rest-unary-test-result.txt](Section%201%20-%20Introduction/gRPC-vs-REST/rest-unary-test-result.txt)
+    -  `ab -n 1000 -c 100 localhost:8080/grpc/unary/1000`
+        -  Result:  [grpc-unary-test-result.txt](Section%201%20-%20Introduction/gRPC-vs-REST/grpc-unary-test-result.txt)
+    -  `ab -n 1000 -c 100 localhost:8080/grpc/stream/1000`
+        -  Result:  [grpc-stream-test-result.txt](Section%201%20-%20Introduction/gRPC-vs-REST/grpc-stream-test-result.txt)
+
+
+
+
 
 

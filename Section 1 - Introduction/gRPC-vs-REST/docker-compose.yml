@@ -1,0 +1,17 @@
+version: '3.7'
+
+services:
+  rest-service:
+    image: vinsdocker/rest-square-service
+  grpc-service:
+    image: vinsdocker/grpc-square-service
+  aggregator-service:
+    image: vinsdocker/aggregator-service
+    ports:
+    - 8080:8080
+    environment:
+      GRPC_CLIENT_SQUARE_ADDRESS: static://grpc-service:6565
+      REST_SQUARE_SERVICE_ENDPOINT: http://rest-service:7575
+    depends_on:
+      - rest-service
+      - grpc-service
