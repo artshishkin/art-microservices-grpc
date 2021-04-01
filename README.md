@@ -26,7 +26,37 @@ Problems
     -  released in 2016
     -  adopted by Netflix, Microsoft
              
+#####  2. HTTP/2-vs-HTTP/1.1
 
-
+-  Ctrl+Shift+I
+-  [HTTP1 with 200ms latency](https://http1.golang.org/gophertiles?latency=200)
+    -  6 TCP connections
+    -  Times from connection start:
+    -  DOM loaded: 347ms
+    -  DOM complete (images loaded): 11980ms
+-  [HTTP2 with 200ms latency](https://http2.golang.org/gophertiles?latency=200)
+    -  1 TCP connection
+    -  Times from connection start:
+    -  DOM loaded: 389ms
+    -  DOM complete (images loaded): 1881ms
+-  Comparison
+    -  Binary
+    -  Header Compression
+    -  Flow Control (back pressure)
+    -  Multiplexing
+-  gRPC - Benefits
+    -  HTTP2 is default
+        -  binary
+        -  multiplexing
+        -  flow-control
+    -  Non-blocking, Streaming bindings
+    -  Protobuf
+        -  Strict Typing
+        -  DTO
+        -  Service Definition
+        -  Language agnostic
+        -  Auto-generated bindings for multiple languages
+    -  Great for mobile apps    
+    
 
 
