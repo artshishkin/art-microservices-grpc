@@ -83,8 +83,10 @@ Problems
     -  `ab -n 1000 -c 100 localhost:8080/grpc/stream/1000`
         -  Result:  [grpc-stream-test-result.txt](Section%201%20-%20Introduction/gRPC-vs-REST/grpc-stream-test-result.txt)
 
+####  Section 2: Protocol Buffers
 
+#####  7. Proto - Project Setup
 
-
+Install plugin for IDEA - Protocol Buffer Editor from Jeremy Volkman
 
 
