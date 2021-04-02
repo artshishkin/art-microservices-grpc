@@ -22,5 +22,5 @@ message Person{
   string name = 1;
   int32 age = 2;
   Address address = 3;
-  Car car = 4;
+  repeated Car car = 4;
 }
