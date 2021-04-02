@@ -1,5 +1,6 @@
 package net.shyshkin.study.grpc.protobuf.models;
 
+import com.google.protobuf.Int32Value;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -7,7 +8,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PersonTest {
 
@@ -16,12 +18,12 @@ class PersonTest {
         //when
         Person person = Person.newBuilder()
                 .setName("Art")
-                .setAge(38)
+                .setAge(Int32Value.newBuilder().setValue(38).build())
                 .build();
         //then
         assertAll(
                 () -> assertEquals("Art", person.getName()),
-                () -> assertEquals(38, person.getAge())
+                () -> assertEquals(38, person.getAge().getValue())
         );
     }
 
@@ -31,13 +33,13 @@ class PersonTest {
         //given
         Person person1 = Person.newBuilder()
                 .setName("Art")
-                .setAge(38)
+                .setAge(Int32Value.newBuilder().setValue(38).build())
                 .build();
 
         //when
         Person person2 = Person.newBuilder()
                 .setName("Art")
-                .setAge(38)
+                .setAge(Int32Value.newBuilder().setValue(38).build())
                 .build();
 
         //then
@@ -50,7 +52,7 @@ class PersonTest {
         //given
         Person person = Person.newBuilder()
                 .setName("Art")
-                .setAge(38)
+                .setAge(Int32Value.newBuilder().setValue(38).build())
                 .build();
         Path tempFile = Files.createTempFile("person", "ser");
         Files.write(tempFile, person.toByteArray());

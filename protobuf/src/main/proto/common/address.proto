@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package common;
 
+import "google/protobuf/wrappers.proto";
+
 option java_multiple_files = true;
 option java_package = "net.shyshkin.study.grpc.protobuf.models";
 
@@ -10,5 +12,5 @@ message Address{
   string city = 2;
   int32 zip_code = 3;
   string address_line1 = 4;
-  string address_line2 = 5;
+  google.protobuf.StringValue address_line2 = 5;
 }

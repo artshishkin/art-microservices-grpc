@@ -1,13 +1,11 @@
 package net.shyshkin.study.grpc.protobuf.models;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.protobuf.Int32Value;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PersonPerformanceSimpleTest {
@@ -19,7 +17,7 @@ class PersonPerformanceSimpleTest {
         //given
         Person person = Person.newBuilder()
                 .setName("Art")
-                .setAge(38)
+                .setAge(Int32Value.newBuilder().setValue(38).build())
                 .build();
 
         JPerson jPerson = new JPerson("Art", 38);

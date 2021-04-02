@@ -1,5 +1,7 @@
 package net.shyshkin.study.grpc.protobuf.models;
 
+import com.google.protobuf.Int32Value;
+import com.google.protobuf.StringValue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +17,7 @@ class CompositionAndCollectionDemoTest {
                 .setCountry("Ukraine")
                 .setCity("Kramatorsk")
                 .setAddressLine1("Nekrasova str.")
-                .setAddressLine2("15")
+                .setAddressLine2(StringValue.newBuilder().setValue("15").build())
                 .setZipCode(84300)
                 .build();
 
@@ -32,7 +34,7 @@ class CompositionAndCollectionDemoTest {
 
         Person person = Person.newBuilder()
                 .setName("Art")
-                .setAge(38)
+                .setAge(Int32Value.newBuilder().setValue(38).build())
                 .setAddress(address)
                 .addCar(carBuilder)
                 .addCar(1, newCar)
@@ -40,7 +42,7 @@ class CompositionAndCollectionDemoTest {
         //then
         assertAll(
                 () -> assertEquals("Art", person.getName()),
-                () -> assertEquals(38, person.getAge()),
+                () -> assertEquals(38, person.getAge().getValue()),
                 () -> assertEquals(address, person.getAddress()),
                 () -> assertEquals(2, person.getCarCount()),
                 () -> assertEquals(newCar, person.getCarList().get(1)),

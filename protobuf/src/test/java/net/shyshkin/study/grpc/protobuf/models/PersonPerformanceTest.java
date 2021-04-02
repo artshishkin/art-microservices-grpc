@@ -1,14 +1,15 @@
 package net.shyshkin.study.grpc.protobuf.models;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.DisplayName;
+import com.google.protobuf.Int32Value;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PersonPerformanceTest {
 
@@ -35,7 +36,7 @@ class PersonPerformanceTest {
             //given
             Person person = Person.newBuilder()
                     .setName("Art")
-                    .setAge(38)
+                    .setAge(Int32Value.newBuilder().setValue(38).build())
                     .build();
 
             Path tempFile = Files.createTempFile("person", "ser");
