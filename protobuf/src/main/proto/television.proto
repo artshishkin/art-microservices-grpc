@@ -3,11 +3,27 @@ syntax = "proto3";
 option java_multiple_files = true;
 option java_package = "net.shyshkin.study.grpc.protobuf.models";
 
+
+/*
 //v1
 message Television{
   string brand = 1;
   int32 year = 2;
 }
+*/
 
+//v2
+message Television{
+  string brand = 1;
+  int32 model = 2;
+  Type type = 3;
+}
+
+enum Type{
+  UNDEFINED = 0;
+  HD = 1;
+  UHD = 2;
+  OLED = 3;
+}
 
 
