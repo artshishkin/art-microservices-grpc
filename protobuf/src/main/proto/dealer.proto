@@ -1,16 +1,13 @@
 syntax = "proto3";
 
-import "common/address.proto";
 import "common/car.proto";
 
 option java_multiple_files = true;
 option java_package = "net.shyshkin.study.grpc.protobuf.models";
 
-message Person{
-  string name = 1;
-  int32 age = 2;
-  common.Address address = 3;
-  repeated common.Car car = 4;
+message Dealer{
+  map<int32, common.Car> car_position = 1;
 }
+
 
 

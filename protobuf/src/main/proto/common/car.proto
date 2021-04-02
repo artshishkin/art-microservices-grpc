@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package common;
+
+option java_multiple_files = true;
+option java_package = "net.shyshkin.study.grpc.protobuf.models";
+
+message Car{
+  string brand = 1;
+  string model = 2;
+  int32 year = 3;
+  BodyStyle body_style = 4;
+}
+
+enum BodyStyle{
+  UNKNOWN = 0;
+  SEDAN = 1;
+  HATCHBACK = 2;
+  COUPE = 3;
+  SUV = 4;
+}

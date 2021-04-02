@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package common;
+
+option java_multiple_files = true;
+option java_package = "net.shyshkin.study.grpc.protobuf.models";
+
+message Address{
+  string country = 1;
+  string city = 2;
+  int32 zip_code = 3;
+  string address_line1 = 4;
+  string address_line2 = 5;
+}
