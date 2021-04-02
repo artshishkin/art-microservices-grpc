@@ -24,3 +24,7 @@ message Person{
   Address address = 3;
   repeated Car car = 4;
 }
+
+message Dealer{
+  map<int32, Car> car_position = 1;
+}
