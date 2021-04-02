@@ -93,6 +93,7 @@ class VersionCompatibilityTest {
     }
 
     @Test
+    @Disabled("Now we have version v4")
     void v3_test_read_v1() throws IOException {
         //given
         Path path = Paths.get("tv-v1");
@@ -110,6 +111,7 @@ class VersionCompatibilityTest {
     }
 
     @Test
+    @Disabled("Now we have version v4")
     void v3_test_read_v2() throws IOException {
         //given
         Path path = Paths.get("tv-v2");
@@ -125,4 +127,41 @@ class VersionCompatibilityTest {
                 () -> assertEquals(Type.OLED, savedTelevision.getType())
         );
     }
+
+    @Test
+    void v4_test_read_v1() throws IOException {
+        //given
+        Path path = Paths.get("tv-v1");
+
+        //when
+        byte[] bytes = Files.readAllBytes(path);
+        Television savedTelevision = Television.parseFrom(bytes);
+
+        //then
+        System.out.println(savedTelevision);
+        assertAll(
+                () -> assertEquals("sony", savedTelevision.getBrand()),
+                () -> assertEquals(2005, savedTelevision.getPrice()),
+                () -> assertEquals(Type.UNDEFINED, savedTelevision.getType())
+        );
+    }
+
+    @Test
+    void v4_test_read_v2() throws IOException {
+        //given
+        Path path = Paths.get("tv-v2");
+
+        //when
+        byte[] bytes = Files.readAllBytes(path);
+        Television savedTelevision = Television.parseFrom(bytes);
+
+        //then
+        System.out.println(savedTelevision);
+        assertAll(
+                () -> assertEquals("sony", savedTelevision.getBrand()),
+                () -> assertEquals(12345, savedTelevision.getPrice()),
+                () -> assertEquals(Type.OLED, savedTelevision.getType())
+        );
+    }
+
 }

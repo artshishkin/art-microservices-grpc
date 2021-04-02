@@ -18,9 +18,16 @@ message Television{
 }
 */
 
-//v3
+/*//v3
 message Television{
   string brand = 1;
+  Type type = 3;
+}*/
+
+//v4
+message Television{
+  string brand = 1;
+  int32 price = 2;
   Type type = 3;
 }
 
