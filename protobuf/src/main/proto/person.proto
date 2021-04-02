@@ -4,12 +4,23 @@ option java_multiple_files = true;
 
 option java_package = "net.shyshkin.study.grpc.protobuf.models";
 
-/*
-This is my person proto file
- */
+message Address{
+  string country = 1;
+  string city = 2;
+  int32 zip_code = 3;
+  string address_line1 = 4;
+  string address_line2 = 5;
+}
+
+message Car{
+  string brand = 1;
+  string model = 2;
+  int32 year = 3;
+}
+
 message Person{
-  // name field
   string name = 1;
-  // age field
   int32 age = 2;
+  Address address = 3;
+  Car car = 4;
 }
