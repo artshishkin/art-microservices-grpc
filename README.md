@@ -94,3 +94,17 @@ Install plugin for IDEA - Protocol Buffer Editor from Jeremy Volkman
 -  `mvn compile`
 -  target - protoc-plugins - protoc-3.6.1-windows-x86_64.exe
 -  target - generated-sources - protobuf - java - PersonOuterClass.java
+
+#####  18. Proto - Auto Generate JS File - Demo
+
+-  cd to directory with proto file (proto/ or target/classes/)
+    -  `cd "C:\Users\Admin\IdeaProjects\Study\VinothSelvaraj\art-microservices-grpc\protobuf\target\classes"`
+-  run protoc plugin executable
+    -  `..\protoc-plugins\protoc-3.6.1-windows-x86_64.exe --js_out=./ person.proto` - single file
+    -  `..\protoc-plugins\protoc-3.6.1-windows-x86_64.exe --js_out=./ *.proto` - multiple
+        -  does not work for me (Windows PowerShell)
+        -  works for Git Bash
+
+
+
+
