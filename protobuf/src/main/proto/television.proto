@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "net.shyshkin.study.grpc.protobuf.models";
+
+//v1
+message Television{
+  string brand = 1;
+  int32 year = 2;
+}
+
+
+
