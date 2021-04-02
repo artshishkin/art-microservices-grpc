@@ -105,6 +105,31 @@ Install plugin for IDEA - Protocol Buffer Editor from Jeremy Volkman
         -  does not work for me (Windows PowerShell)
         -  works for Git Bash
 
+#####  30. Proto - How It Works - Demo
 
-
-
+-  JSON - 23 bytes
+-  Protobuf - 7 bytes (9 bytes with wrapper)
+```
+message Person{
+  string name = 1;
+  google.protobuf.Int32Value age = 2;
+  common.Address address = 3;
+  repeated common.Car car = 4;
+}
+```
+-  JSON: 23 symbols
+```json
+    {"name":"Art","age":38}
+```
+-  Protobuf:
+    -  1=Art - 3 symbols - 3 bytes
+    -  2=38 - int32 - 1 byte
+-  [Protobuf Encoding](https://developers.google.com/protocol-buffers/docs/encoding)    
+-  1 is tag, 2 is tag, 3 is tag ...
+-  Can be 100,234,12,543,... whatever
+-  But
+    -  1-15 - 1 byte
+    -  16-2047 - 2 bytes
+    -  recommendations:
+        -  frequently used fields - lower tag
+        -  less frequent fields - larger tag

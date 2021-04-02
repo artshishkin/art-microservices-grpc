@@ -70,4 +70,45 @@ class PersonPerformanceSimpleTest {
         }
         return System.currentTimeMillis() - start;
     }
+
+    @Test
+    void view_JSON_PROTO_object_size() {
+        //given
+        Person person = Person.newBuilder()
+                .setName("Art")
+                .setAge(Int32Value.newBuilder().setValue(38).build())
+                .build();
+
+        JPerson jPerson = new JPerson("Art", 38);
+
+        Runnable grpcRunnable = () -> {
+            try {
+                //when
+                byte[] personBytes = person.toByteArray();
+                System.out.printf("Size of Proto Person: %d bytes\n", personBytes.length);
+                Person deserializedPerson = Person.parseFrom(personBytes);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        };
+
+        Runnable jsonRunnable = () -> {
+            try {
+                //when
+                byte[] personBytes = objectMapper.writeValueAsBytes(jPerson);
+                System.out.printf("Size of JSON Person: %d bytes\n", personBytes.length);
+                JPerson deserializedPerson = objectMapper.readValue(personBytes, JPerson.class);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        };
+
+        //when
+        long jsonDuration = measureDurationMultiple(jsonRunnable, 1);
+        long grpcDuration = measureDurationMultiple(grpcRunnable, 1);
+
+        //then
+        assertTrue(2 * grpcDuration < jsonDuration);
+    }
+
 }
