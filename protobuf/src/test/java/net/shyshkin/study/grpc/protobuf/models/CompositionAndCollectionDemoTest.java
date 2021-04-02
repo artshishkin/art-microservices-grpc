@@ -1,5 +1,6 @@
 package net.shyshkin.study.grpc.protobuf.models;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -50,17 +51,19 @@ class CompositionAndCollectionDemoTest {
     }
 
     @Test
-    void mapDemo() {
+    void mapAndEnumDemo() {
         //given
         Car escape = Car.newBuilder()
                 .setBrand("Ford")
                 .setModel("Escape")
                 .setYear(2015)
+                .setBodyStyle(BodyStyle.SUV)
                 .build();
 
         Car journey = Car.newBuilder()
                 .setBrand("Dodge")
                 .setModel("Journey")
+                .setBodyStyle(BodyStyle.COUPE)
                 .setYear(2014)
                 .build();
 
@@ -73,6 +76,26 @@ class CompositionAndCollectionDemoTest {
         //then
         assertEquals(escape, dealer.getCarPositionOrThrow(54321));
         assertEquals(2, dealer.getCarPositionCount());
+        assertEquals(BodyStyle.COUPE, dealer.getCarPositionOrThrow(54322).getBodyStyle());
         System.out.println(dealer);
+    }
+
+    @Test
+    @DisplayName("When we did not set value for enum field it will take field with index 0")
+    void defaultEnumValue() {
+        //given
+        Car lanos = Car.newBuilder()
+                .setBrand("Daewoo")
+                .setModel("Lanos")
+                .setYear(2008)
+                .build();
+
+        //when
+        Dealer dealer = Dealer.newBuilder()
+                .putCarPosition(54321, lanos)
+                .build();
+
+        //then
+        assertEquals(BodyStyle.UNKNOWN, dealer.getCarPositionOrThrow(54321).getBodyStyle());
     }
 }
