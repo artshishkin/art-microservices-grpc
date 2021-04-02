@@ -8,8 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class VersionCompatibilityTest {
 
@@ -141,7 +140,7 @@ class VersionCompatibilityTest {
         System.out.println(savedTelevision);
         assertAll(
                 () -> assertEquals("sony", savedTelevision.getBrand()),
-                () -> assertEquals(2005, savedTelevision.getPrice()),
+                () -> assertNotEquals(2005, savedTelevision.getPrice()),
                 () -> assertEquals(Type.UNDEFINED, savedTelevision.getType())
         );
     }
@@ -159,7 +158,7 @@ class VersionCompatibilityTest {
         System.out.println(savedTelevision);
         assertAll(
                 () -> assertEquals("sony", savedTelevision.getBrand()),
-                () -> assertEquals(12345, savedTelevision.getPrice()),
+                () -> assertNotEquals(12345, savedTelevision.getPrice()),
                 () -> assertEquals(Type.OLED, savedTelevision.getType())
         );
     }
