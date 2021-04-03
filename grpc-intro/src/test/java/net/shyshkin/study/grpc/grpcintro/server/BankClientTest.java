@@ -25,9 +25,11 @@ class BankClientTest {
     @BeforeAll
     static void beforeAll() throws IOException {
 
+        AccountDatabase accountDatabase = new AccountDatabase();
+
         server = ServerBuilder
                 .forPort(6565)
-                .addService(new BankService())
+                .addService(new BankService(accountDatabase))
                 .build();
 
         System.out.println("Starting gRPC server");

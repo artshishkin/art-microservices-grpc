@@ -8,9 +8,12 @@ import java.io.IOException;
 public class GrpcServer {
 
     public static void main(String[] args) throws IOException, InterruptedException {
+
+        AccountDatabase accountDatabase = new AccountDatabase();
+
         Server server = ServerBuilder
                 .forPort(6565)
-                .addService(new BankService())
+                .addService(new BankService(accountDatabase))
                 .build();
 
         server.start();

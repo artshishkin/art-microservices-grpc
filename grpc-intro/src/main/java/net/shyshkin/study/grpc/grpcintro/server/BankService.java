@@ -7,6 +7,12 @@ import net.shyshkin.study.grpc.grpcintro.models.BankServiceGrpc;
 
 public class BankService extends BankServiceGrpc.BankServiceImplBase {
 
+    private final AccountDatabase accountDatabase;
+
+    public BankService(AccountDatabase accountDatabase) {
+        this.accountDatabase = accountDatabase;
+    }
+
     @Override
     public void getBalance(BalanceCheckRequest request, StreamObserver<Balance> responseObserver) {
         int accountNumber = request.getAccountNumber();
@@ -16,7 +22,7 @@ public class BankService extends BankServiceGrpc.BankServiceImplBase {
 
     private Balance retrieveBalanceFromDB(int accountNumber) {
         return Balance.newBuilder()
-                .setAmount(accountNumber * 111)
+                .setAmount(accountDatabase.getBalance(accountNumber))
                 .build();
     }
 
