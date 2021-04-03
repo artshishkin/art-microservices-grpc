@@ -1,9 +1,7 @@
 package net.shyshkin.study.grpc.grpcintro.server;
 
 import io.grpc.stub.StreamObserver;
-import net.shyshkin.study.grpc.grpcintro.models.Balance;
-import net.shyshkin.study.grpc.grpcintro.models.BalanceCheckRequest;
-import net.shyshkin.study.grpc.grpcintro.models.BankServiceGrpc;
+import net.shyshkin.study.grpc.grpcintro.models.*;
 
 public class BankService extends BankServiceGrpc.BankServiceImplBase {
 
@@ -26,4 +24,27 @@ public class BankService extends BankServiceGrpc.BankServiceImplBase {
                 .build();
     }
 
+    @Override
+    public void withdraw(WithdrawRequest request, StreamObserver<Money> responseObserver) {
+        int accountId = request.getAccountNumber();
+        int amount = request.getAmount();
+
+        int availableBalance = accountDatabase.getBalance(accountId);
+        if (availableBalance > amount) {
+
+            for (int i = 0; i < amount / 10; i++) {
+                Money money = Money.newBuilder()
+                        .setValue(10)
+                        .build();
+                int deductBalance = accountDatabase.deductBalance(accountId, 10);
+                responseObserver.onNext(money);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ignored) {
+                }
+            }
+            responseObserver.onCompleted();
+        } else
+            responseObserver.onError(new RuntimeException("Not enough money"));
+    }
 }
