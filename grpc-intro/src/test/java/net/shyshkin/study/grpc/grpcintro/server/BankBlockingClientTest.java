@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class BankClientTest {
+class BankBlockingClientTest {
 
     private static BankServiceGrpc.BankServiceBlockingStub blockingStub;
     private static Server server;

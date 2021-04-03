@@ -184,5 +184,13 @@ message Person{
 -  stop GrpcServer
 -  `node .\bank-client.js`
     -  something bad happenedError: 14 UNAVAILABLE: failed to connect to all addresses 
+
+####  Section 4: gRPC - Server Streaming RPC
        
+#####  55. gRPC - Error Codes
+
+-  [gRPC - Error Codes](https://developers.google.com/maps-booking/reference/grpc-api-v2/status_codes)
+
+
+
            
