@@ -1,13 +1,10 @@
 package net.shyshkin.study.grpc.grpcintro.server;
 
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
+import io.grpc.*;
 import net.shyshkin.study.grpc.grpcintro.models.*;
+import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -17,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -69,7 +67,6 @@ class BankClientTest {
     }
 
     @Test
-    @Disabled("Too long to test in CI/CD. Enable for manual testing")
     void withdrawTest() {
         //given
         WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
@@ -85,5 +82,27 @@ class BankClientTest {
         moneyIterator.forEachRemaining(moneyList::add);
         assertEquals(4, moneyList.size());
         moneyList.forEach(money -> assertEquals(10, money.getValue()));
+    }
+
+    @Test
+    void withdrawTest_notEnoughMoney() throws InterruptedException {
+        //given
+        WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
+                .setAccountNumber(7)
+                .setAmount(4000)
+                .build();
+
+        //when
+        ThrowableAssert.ThrowingCallable exec = () -> {
+            Iterator<Money> moneyIterator = blockingStub.withdraw(withdrawRequest);
+            List<Money> moneyList = new ArrayList<>();
+            moneyIterator.forEachRemaining(moneyList::add);
+            assertEquals(400, moneyList.size());
+        };
+
+        //then
+        assertThatThrownBy(exec)
+                .isInstanceOf(StatusRuntimeException.class)
+                .hasMessage("FAILED_PRECONDITION: Not enough money. You have only 777");
     }
 }

@@ -1,5 +1,6 @@
 package net.shyshkin.study.grpc.grpcintro.server;
 
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import net.shyshkin.study.grpc.grpcintro.models.*;
 
@@ -30,22 +31,25 @@ public class BankService extends BankServiceGrpc.BankServiceImplBase {
         int amount = request.getAmount();
 
         int availableBalance = accountDatabase.getBalance(accountId);
-        if (availableBalance > amount) {
+        if (availableBalance < amount) {
+            Status status = Status.FAILED_PRECONDITION
+                    .withDescription("Not enough money. You have only " + availableBalance);
+            responseObserver.onError(status.asRuntimeException());
+            return;
+        }
 
-            for (int i = 0; i < amount / 10; i++) {
-                Money money = Money.newBuilder()
-                        .setValue(10)
-                        .build();
-                int deductBalance = accountDatabase.deductBalance(accountId, 10);
-                responseObserver.onNext(money);
-                System.out.println("withdraw " + money);
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ignored) {
-                }
-            }
-            responseObserver.onCompleted();
-        } else
-            responseObserver.onError(new RuntimeException("Not enough money"));
+        for (int i = 0; i < amount / 10; i++) {
+            Money money = Money.newBuilder()
+                    .setValue(10)
+                    .build();
+            int deductBalance = accountDatabase.deductBalance(accountId, 10);
+            responseObserver.onNext(money);
+            System.out.println("withdraw " + money);
+//            try {
+//                Thread.sleep(1000);
+//            } catch (InterruptedException ignored) {
+//            }
+        }
+        responseObserver.onCompleted();
     }
 }
