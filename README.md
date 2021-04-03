@@ -168,7 +168,21 @@ message Person{
         }   
     ```
  
+#####  49. Unary - Node Client
 
-   
-   
+-  cd node-client
+-  create empty project
+    -  `npm init -y`
+-  install dependencies
+    -  `npm install @grpc/proto-loader grpc`    
+-  copy `bank-service.proto` from Java project into NodeJS project
+-  create [bank-client.js](node-client\bank-client.js)
+-  start [GrpcServer](grpc-intro/src/main/java/net/shyshkin/study/grpc/grpcintro/server/GrpcServer.java)
+-  `node .\bank-client.js`
+    -  Received balance: 444  
+    -  OK))
+-  stop GrpcServer
+-  `node .\bank-client.js`
+    -  something bad happenedError: 14 UNAVAILABLE: failed to connect to all addresses 
+       
            
