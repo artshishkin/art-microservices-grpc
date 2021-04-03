@@ -1,20 +1,16 @@
 package net.shyshkin.study.grpc.grpcintro.server;
 
-import com.google.common.util.concurrent.Uninterruptibles;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
 import net.shyshkin.study.grpc.grpcintro.models.*;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CountDownLatch;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,6 +19,7 @@ class BankNonBlockingClientTest {
 
     private static BankServiceGrpc.BankServiceStub nonBlockingStub;
     private static Server server;
+    private CountDownLatch countDownLatch;
 
     @BeforeAll
     static void beforeAll() throws IOException {
@@ -51,9 +48,14 @@ class BankNonBlockingClientTest {
         server.shutdown();
     }
 
+    @BeforeEach
+    void setUp() {
+        countDownLatch = new CountDownLatch(1);
+    }
+
     @AfterEach
-    void tearDown() {
-        Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
+    void tearDown() throws InterruptedException {
+        countDownLatch.await();
     }
 
     @ParameterizedTest
@@ -97,13 +99,11 @@ class BankNonBlockingClientTest {
 
         //when
         nonBlockingStub.withdraw(withdrawRequest, observer);
-        Uninterruptibles.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
     }
 
-    private static class TestBalanceStreamObserver implements StreamObserver<Balance> {
+    private class TestBalanceStreamObserver implements StreamObserver<Balance> {
         private final int accountNumber;
         private final int expectedBalance;
-
 
         public TestBalanceStreamObserver(int accountNumber, int expectedBalance) {
             this.accountNumber = accountNumber;
@@ -118,15 +118,17 @@ class BankNonBlockingClientTest {
 
         @Override
         public void onError(Throwable t) {
+            countDownLatch.countDown();
         }
 
         @Override
         public void onCompleted() {
             System.out.println("onCompleted ");
+            countDownLatch.countDown();
         }
     }
 
-    private static class TestMoneyStreamObserver implements StreamObserver<Money> {
+    private class TestMoneyStreamObserver implements StreamObserver<Money> {
 
         private final int expectedWithdrawalCount;
         private final List<Money> moneyList = new ArrayList<>();
@@ -149,6 +151,7 @@ class BankNonBlockingClientTest {
             assertThat(t)
                     .isInstanceOf(StatusRuntimeException.class)
                     .hasMessageContaining("FAILED_PRECONDITION: Not enough money. You have only ");
+            countDownLatch.countDown();
         }
 
         @Override
@@ -157,6 +160,7 @@ class BankNonBlockingClientTest {
             assertThat(moneyList)
                     .hasSize(expectedWithdrawalCount)
                     .allSatisfy(money -> assertThat(money.getValue()).isEqualTo(10));
+            countDownLatch.countDown();
         }
     }
 }
