@@ -133,3 +133,42 @@ message Person{
     -  recommendations:
         -  frequently used fields - lower tag
         -  less frequent fields - larger tag
+
+####  Section 3: gRPC - Introduction & Unary RPC
+
+#####  48. Unary - BloomRPC - Demo
+
+-  [Install BloomRPC](https://github.com/uw-labs/bloomrpc/releases)
+-  Start BloomRPC
+    -  Protos -> Import
+    -  View Proto
+    -  127.0.0.1:6565
+    -  getBalance
+    ```json
+        {
+          "account_number": 10
+        }
+    ```          
+    -  Response
+    ```json
+        {
+          "amount": 1110
+        }
+    ```
+    -  getBalance
+    ```json
+        {
+          "account_number": 1000
+        }
+    ```   
+   -  Response
+    ```json
+        {
+          "error": "2 UNKNOWN: "
+        }   
+    ```
+ 
+
+   
+   
+           
