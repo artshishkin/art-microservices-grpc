@@ -38,6 +38,7 @@ public class BankService extends BankServiceGrpc.BankServiceImplBase {
                         .build();
                 int deductBalance = accountDatabase.deductBalance(accountId, 10);
                 responseObserver.onNext(money);
+                System.out.println("withdraw " + money);
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException ignored) {
