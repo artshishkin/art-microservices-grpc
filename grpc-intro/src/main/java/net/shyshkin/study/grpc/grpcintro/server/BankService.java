@@ -2,8 +2,10 @@ package net.shyshkin.study.grpc.grpcintro.server;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.grpcintro.models.*;
 
+@Slf4j
 public class BankService extends BankServiceGrpc.BankServiceImplBase {
 
     private final AccountDatabase accountDatabase;
@@ -44,7 +46,7 @@ public class BankService extends BankServiceGrpc.BankServiceImplBase {
                     .build();
             int deductBalance = accountDatabase.deductBalance(accountId, 10);
             responseObserver.onNext(money);
-            System.out.println("withdraw " + money);
+            log.debug("withdraw {}", money);
         }
         responseObserver.onCompleted();
     }

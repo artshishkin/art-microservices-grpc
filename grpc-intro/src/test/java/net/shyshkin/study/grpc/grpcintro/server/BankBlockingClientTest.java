@@ -1,6 +1,7 @@
 package net.shyshkin.study.grpc.grpcintro.server;
 
 import io.grpc.*;
+import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.grpcintro.models.*;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.AfterAll;
@@ -17,6 +18,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Slf4j
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BankBlockingClientTest {
 
@@ -33,7 +35,7 @@ class BankBlockingClientTest {
                 .addService(new BankService(accountDatabase))
                 .build();
 
-        System.out.println("Starting gRPC server");
+        log.debug("Starting gRPC server");
 
         server.start();
 
@@ -46,7 +48,7 @@ class BankBlockingClientTest {
 
     @AfterAll
     static void afterAll() {
-        System.out.println("Shutdown gRPC server");
+        log.debug("Shutdown gRPC server");
         server.shutdown();
     }
 
@@ -62,7 +64,7 @@ class BankBlockingClientTest {
         Balance balance = blockingStub.getBalance(balanceCheckRequest);
 
         //then
-        System.out.printf("Received balance: %d for user %d", balance.getAmount(), accountNumber);
+        log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
         assertEquals(accountNumber * 111, balance.getAmount());
     }
 
@@ -94,6 +96,7 @@ class BankBlockingClientTest {
 
         //when
         ThrowableAssert.ThrowingCallable exec = () -> {
+            log.debug("Trying to withdraw not available amount: {}", withdrawRequest.getAmount());
             Iterator<Money> moneyIterator = blockingStub.withdraw(withdrawRequest);
             List<Money> moneyList = new ArrayList<>();
             moneyIterator.forEachRemaining(moneyList::add);

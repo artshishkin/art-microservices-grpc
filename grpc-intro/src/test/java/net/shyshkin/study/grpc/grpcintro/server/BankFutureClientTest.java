@@ -5,6 +5,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.grpcintro.models.Balance;
 import net.shyshkin.study.grpc.grpcintro.models.BalanceCheckRequest;
 import net.shyshkin.study.grpc.grpcintro.models.BankServiceGrpc;
@@ -18,6 +19,7 @@ import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Slf4j
 class BankFutureClientTest {
 
     private static BankServiceGrpc.BankServiceFutureStub futureStub;
@@ -33,7 +35,7 @@ class BankFutureClientTest {
                 .addService(new BankService(accountDatabase))
                 .build();
 
-        System.out.println("Starting gRPC server");
+        log.debug("Starting gRPC server");
 
         server.start();
 
@@ -46,7 +48,7 @@ class BankFutureClientTest {
 
     @AfterAll
     static void afterAll() {
-        System.out.println("Shutdown gRPC server");
+        log.debug("Shutdown gRPC server");
         server.shutdown();
     }
 
@@ -62,7 +64,7 @@ class BankFutureClientTest {
         //when
         ListenableFuture<Balance> balanceFuture = futureStub.getBalance(balanceCheckRequest);
         Balance balance = balanceFuture.get();
-        System.out.printf("Received balance: %d for user %d\n", balance.getAmount(), accountNumber);
+        log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
         assertThat(balance.getAmount()).isEqualTo(expectedBalance);
     }
 }

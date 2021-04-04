@@ -2,6 +2,7 @@ package net.shyshkin.study.grpc.grpcintro.server;
 
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
+import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.grpcintro.models.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,6 +16,7 @@ import java.util.concurrent.CountDownLatch;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Slf4j
 class BankNonBlockingClientTest {
 
     private static BankServiceGrpc.BankServiceStub nonBlockingStub;
@@ -31,7 +33,7 @@ class BankNonBlockingClientTest {
                 .addService(new BankService(accountDatabase))
                 .build();
 
-        System.out.println("Starting gRPC server");
+        log.debug("Starting gRPC server");
 
         server.start();
 
@@ -44,7 +46,7 @@ class BankNonBlockingClientTest {
 
     @AfterAll
     static void afterAll() {
-        System.out.println("Shutdown gRPC server");
+        log.debug("Shutdown gRPC server");
         server.shutdown();
     }
 
@@ -112,7 +114,7 @@ class BankNonBlockingClientTest {
 
         @Override
         public void onNext(Balance value) {
-            System.out.printf("Received balance: %d for user %d\n", value.getAmount(), accountNumber);
+            log.debug("Received balance: %d for user %d\n", value.getAmount(), accountNumber);
             assertThat(value.getAmount()).isEqualTo(expectedBalance);
         }
 
@@ -123,7 +125,7 @@ class BankNonBlockingClientTest {
 
         @Override
         public void onCompleted() {
-            System.out.println("onCompleted ");
+            log.debug("onCompleted ");
             countDownLatch.countDown();
         }
     }
@@ -139,14 +141,14 @@ class BankNonBlockingClientTest {
 
         @Override
         public void onNext(Money value) {
-            System.out.printf("Withdraw money: %d\n", value.getValue());
+            log.debug("Withdraw money: %d\n", value.getValue());
             assertEquals(10, value.getValue());
             moneyList.add(value);
         }
 
         @Override
         public void onError(Throwable t) {
-            System.out.println("Exception was thrown: " + t.getMessage());
+            log.debug("Exception was thrown: " + t.getMessage());
             //then
             assertThat(t)
                     .isInstanceOf(StatusRuntimeException.class)
@@ -156,7 +158,7 @@ class BankNonBlockingClientTest {
 
         @Override
         public void onCompleted() {
-            System.out.println("onCompleted ");
+            log.debug("onCompleted ");
             assertThat(moneyList)
                     .hasSize(expectedWithdrawalCount)
                     .allSatisfy(money -> assertThat(money.getValue()).isEqualTo(10));
@@ -190,9 +192,8 @@ class BankNonBlockingClientTest {
                 depositClient.onNext(depositRequest);
             }
             depositClient.onCompleted();
-//            Uninterruptibles.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
+//            Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
             countDownLatch.await();
-//            Uninterruptibles.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
             assertThat(testResultWrapper.getBalance()).isEqualTo(expectedBalance);
         }
 
@@ -210,18 +211,18 @@ class BankNonBlockingClientTest {
             @Override
             public void onNext(Balance value) {
                 receivedBalance = value.getAmount();
-                System.out.printf("Received balance: %d for user %d\n", receivedBalance, accountNumber);
+                log.debug("Received balance: %d for user %d\n", receivedBalance, accountNumber);
             }
 
             @Override
             public void onError(Throwable t) {
-                System.out.println("Exception occurred: " + t.getMessage());
+                log.debug("Exception occurred: " + t.getMessage());
                 countDownLatch.countDown();
             }
 
             @Override
             public void onCompleted() {
-                System.out.println("onCompleted ");
+                log.debug("onCompleted ");
                 testResultWrapper.setBalance(receivedBalance);
                 countDownLatch.countDown();
             }
