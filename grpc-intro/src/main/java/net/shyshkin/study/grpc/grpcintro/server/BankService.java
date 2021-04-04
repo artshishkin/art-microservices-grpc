@@ -45,11 +45,13 @@ public class BankService extends BankServiceGrpc.BankServiceImplBase {
             int deductBalance = accountDatabase.deductBalance(accountId, 10);
             responseObserver.onNext(money);
             System.out.println("withdraw " + money);
-//            try {
-//                Thread.sleep(1000);
-//            } catch (InterruptedException ignored) {
-//            }
         }
         responseObserver.onCompleted();
     }
+
+    @Override
+    public StreamObserver<DepositRequest> deposit(StreamObserver<Balance> responseObserver) {
+        return new DepositStreamObserver(responseObserver, accountDatabase);
+    }
+
 }
