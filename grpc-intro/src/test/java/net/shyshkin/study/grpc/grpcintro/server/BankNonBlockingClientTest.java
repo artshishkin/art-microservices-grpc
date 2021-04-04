@@ -163,4 +163,80 @@ class BankNonBlockingClientTest {
             countDownLatch.countDown();
         }
     }
+
+    @Nested
+    class DepositTest {
+
+        @Test
+        void depositTest() throws InterruptedException {
+            //given
+            int accountNumber = 9;
+            int depositCount = 4;
+            int chunkAmount = 10;
+            int expectedBalance = accountNumber * 111 + depositCount * chunkAmount;
+
+            TestResultWrapper testResultWrapper = new TestResultWrapper();
+
+            StreamObserver<Balance> observer = new TestDepositBalanceStreamObserver(accountNumber, testResultWrapper);
+
+            //when
+            StreamObserver<DepositRequest> depositClient = nonBlockingStub.deposit(observer);
+
+            for (int i = 0; i < depositCount; i++) {
+                DepositRequest depositRequest = DepositRequest.newBuilder()
+                        .setAccountNumber(accountNumber)
+                        .setAmount(chunkAmount)
+                        .build();
+                depositClient.onNext(depositRequest);
+            }
+            depositClient.onCompleted();
+//            Uninterruptibles.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
+            countDownLatch.await();
+//            Uninterruptibles.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
+            assertThat(testResultWrapper.getBalance()).isEqualTo(expectedBalance);
+        }
+
+        private class TestDepositBalanceStreamObserver implements StreamObserver<Balance> {
+
+            private final int accountNumber;
+            private final TestResultWrapper testResultWrapper;
+            private int receivedBalance = 0;
+
+            public TestDepositBalanceStreamObserver(int accountNumber, TestResultWrapper testResultWrapper) {
+                this.accountNumber = accountNumber;
+                this.testResultWrapper = testResultWrapper;
+            }
+
+            @Override
+            public void onNext(Balance value) {
+                receivedBalance = value.getAmount();
+                System.out.printf("Received balance: %d for user %d\n", receivedBalance, accountNumber);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                System.out.println("Exception occurred: " + t.getMessage());
+                countDownLatch.countDown();
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("onCompleted ");
+                testResultWrapper.setBalance(receivedBalance);
+                countDownLatch.countDown();
+            }
+        }
+
+        private class TestResultWrapper {
+            int balance;
+
+            public int getBalance() {
+                return balance;
+            }
+
+            public void setBalance(int balance) {
+                this.balance = balance;
+            }
+        }
+    }
 }
