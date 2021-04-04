@@ -15,7 +15,17 @@ class TransferResponseStreamObserver implements StreamObserver<TransferResponse>
 
     @Override
     public void onNext(TransferResponse transferResponse) {
-        log.debug("Received \n{}", transferResponse);
+        StringBuilder builder = new StringBuilder();
+        builder.append(" [").append(transferResponse.getStatus()).append("] ");
+        transferResponse.getAccountBalancesList()
+                .forEach(accountBalance -> builder
+                        .append("{")
+                        .append(accountBalance.getAccountNumber())
+                        .append(" : ")
+                        .append(accountBalance.getAmount())
+                        .append("}")
+                );
+        log.debug("Received {}", builder);
     }
 
     @Override

@@ -37,7 +37,7 @@ class TransferRequestStreamObserver implements StreamObserver<TransferRequest> {
                 .addAccountBalances(AccountBalance.newBuilder().setAccountNumber(toAccount).setAmount(toBalance))
                 .setStatus(status)
                 .build();
-        log.debug("Transfer finished with response `{}`", response);
+        log.debug("Transfer finished with response: `{}`", transferResponseToString(response));
         responseObserver.onNext(response);
     }
 
@@ -50,5 +50,19 @@ class TransferRequestStreamObserver implements StreamObserver<TransferRequest> {
     public void onCompleted() {
         log.debug("onCompleted");
         responseObserver.onCompleted();
+    }
+
+    private String transferResponseToString(TransferResponse transferResponse) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(" [").append(transferResponse.getStatus()).append("] ");
+        transferResponse.getAccountBalancesList()
+                .forEach(accountBalance -> builder
+                        .append("{")
+                        .append(accountBalance.getAccountNumber())
+                        .append(" : ")
+                        .append(accountBalance.getAmount())
+                        .append("}")
+                );
+        return builder.toString();
     }
 }
