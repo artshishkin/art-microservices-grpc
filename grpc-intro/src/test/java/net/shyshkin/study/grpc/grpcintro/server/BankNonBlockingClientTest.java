@@ -62,7 +62,7 @@ class BankNonBlockingClientTest {
 
     @ParameterizedTest
     @ValueSource(ints = {3, 5, 7})
-    void balanceTest(int accountNumber) throws InterruptedException {
+    void balanceTest(int accountNumber) {
         //given
         BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
                 .setAccountNumber(accountNumber)
@@ -114,7 +114,7 @@ class BankNonBlockingClientTest {
 
         @Override
         public void onNext(Balance value) {
-            log.debug("Received balance: %d for user %d\n", value.getAmount(), accountNumber);
+            log.debug("Received balance: {} for user {}", value.getAmount(), accountNumber);
             assertThat(value.getAmount()).isEqualTo(expectedBalance);
         }
 
@@ -141,7 +141,7 @@ class BankNonBlockingClientTest {
 
         @Override
         public void onNext(Money value) {
-            log.debug("Withdraw money: %d\n", value.getValue());
+            log.debug("Withdraw money: {}", value.getValue());
             assertEquals(10, value.getValue());
             moneyList.add(value);
         }
@@ -211,7 +211,7 @@ class BankNonBlockingClientTest {
             @Override
             public void onNext(Balance value) {
                 receivedBalance = value.getAmount();
-                log.debug("Received balance: %d for user %d\n", receivedBalance, accountNumber);
+                log.debug("Received balance: {} for user {}", receivedBalance, accountNumber);
             }
 
             @Override
