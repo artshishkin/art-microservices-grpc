@@ -38,7 +38,7 @@ public class NginxGenericContainerClientTest {
     @Container
     public static GenericContainer nginx = new GenericContainer(DockerImageName.parse("nginx:1.15-alpine"))
             .withExposedPorts(8585)
-            .withFileSystemBind("C:\\Users\\Admin\\IdeaProjects\\Study\\VinothSelvaraj\\art-microservices-grpc\\nginx\\conf", "/etc/nginx/conf.d", BindMode.READ_ONLY);
+            .withFileSystemBind("./../nginx/conf", "/etc/nginx/conf.d", BindMode.READ_ONLY);
 
     private static BankServiceGrpc.BankServiceBlockingStub blockingStub;
 
