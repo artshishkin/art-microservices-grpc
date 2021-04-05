@@ -16,7 +16,7 @@ public class GrpcServer1 {
 
         Server server = ServerBuilder
                 .forPort(6565)
-                .addService(new BankService(accountDatabase))
+                .addService(new BankService(accountDatabase,6565))
                 .build();
 
         server.start();

@@ -2,26 +2,25 @@ package net.shyshkin.study.grpc.grpcintro.server.loadbalancing;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.grpcintro.models.*;
 import net.shyshkin.study.grpc.grpcintro.server.rpctypes.AccountDatabase;
 import net.shyshkin.study.grpc.grpcintro.server.rpctypes.DepositStreamObserver;
 
 @Slf4j
+@RequiredArgsConstructor
 public class BankService extends BankServiceGrpc.BankServiceImplBase {
 
     private final AccountDatabase accountDatabase;
-
-    public BankService(AccountDatabase accountDatabase) {
-        this.accountDatabase = accountDatabase;
-    }
+    private final int serverPort;
 
     @Override
     public void getBalance(BalanceCheckRequest request, StreamObserver<Balance> responseObserver) {
         int accountNumber = request.getAccountNumber();
         log.debug("Received request for {}", accountNumber);
 
-        responseObserver.onNext(retrieveBalanceFromDB(accountNumber));
+        responseObserver.onNext(retrieveBalanceFromDB(accountNumber).toBuilder().setServerPort(serverPort).build());
         responseObserver.onCompleted();
     }
 

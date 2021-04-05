@@ -10,6 +10,7 @@ message BalanceCheckRequest{
 //USD
 message Balance{
   int32 amount = 1;
+  int32 server_port = 2;
 }
 
 message WithdrawRequest{
