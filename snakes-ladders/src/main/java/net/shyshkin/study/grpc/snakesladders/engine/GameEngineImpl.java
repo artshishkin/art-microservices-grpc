@@ -37,8 +37,10 @@ public class GameEngineImpl implements GameEngine {
 
     private Player getNewPlayerPosition(Player player, int dieValue) {
         int newPosition = player.getPosition() + dieValue;
-        if (newPosition <= FINAL_POSITION)
+        if (newPosition <= FINAL_POSITION) {
+            newPosition = SnakesAndLaddersMap.getPosition(newPosition);
             player = player.toBuilder().setPosition(newPosition).build();
+        }
         return player;
     }
 }
