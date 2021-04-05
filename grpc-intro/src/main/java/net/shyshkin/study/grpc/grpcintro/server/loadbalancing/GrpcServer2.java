@@ -4,7 +4,6 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.grpcintro.server.rpctypes.AccountDatabase;
-import net.shyshkin.study.grpc.grpcintro.server.rpctypes.BankService;
 
 import java.io.IOException;
 

@@ -191,6 +191,16 @@ message Person{
 
 -  [gRPC - Error Codes](https://developers.google.com/maps-booking/reference/grpc-api-v2/status_codes)
 
+####  Section 8: Channel & Load Balancing
 
+#####  90. Load Balancing - Nginx Conf
 
+-  `server 172.17.0.1:6565` - does NOT work
+-  `server 172.17.0.2:6565` - does NOT work
+-  `server 192.168.1.154:6565;` - **works** with PC Local Network IP (ipconfig)
+-  `ipconfig`
+    -  `Адаптер Ethernet vEthernet (WSL):`
+    -   `IPv4-адрес. . . . . . . . . . . . : 172.22.0.1`
+    -  **SO**
+    -  `server 172.22.0.1:6565;` - **works**
            
