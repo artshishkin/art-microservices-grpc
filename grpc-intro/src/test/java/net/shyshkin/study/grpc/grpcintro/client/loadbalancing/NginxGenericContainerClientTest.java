@@ -10,7 +10,15 @@ import net.shyshkin.study.grpc.grpcintro.models.BalanceCheckRequest;
 import net.shyshkin.study.grpc.grpcintro.models.BankServiceGrpc;
 import net.shyshkin.study.grpc.grpcintro.server.loadbalancing.BankService;
 import net.shyshkin.study.grpc.grpcintro.server.rpctypes.AccountDatabase;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,9 +31,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
-@DisplayName("Manually start docker-compose with nginx then run test")
-@Disabled("Needs to start Nginx manually")
-public class NginxAutoClientTest {
+@DisplayName("Nginx starts in Testcontainers using Generic Container")
+@Testcontainers
+public class NginxGenericContainerClientTest {
+
+    @Container
+    public static GenericContainer nginx = new GenericContainer(DockerImageName.parse("nginx:1.15-alpine"))
+            .withExposedPorts(8585)
+            .withFileSystemBind("C:\\Users\\Admin\\IdeaProjects\\Study\\VinothSelvaraj\\art-microservices-grpc\\nginx\\conf", "/etc/nginx/conf.d", BindMode.READ_ONLY);
 
     private static BankServiceGrpc.BankServiceBlockingStub blockingStub;
 
@@ -58,8 +71,12 @@ public class NginxAutoClientTest {
 
         log.debug("All {} servers started successfully", SERVERS_COUNT);
 
+        Integer nginxPort = nginx.getFirstMappedPort();
+        String nginxHost = nginx.getHost();
+        log.debug("Nginx started on {}:{}", nginxHost, nginxPort);
+
         ManagedChannel managedChannel = ManagedChannelBuilder
-                .forAddress("localhost", 8585)
+                .forAddress(nginxHost, nginxPort)
                 .usePlaintext()
                 .build();
 
