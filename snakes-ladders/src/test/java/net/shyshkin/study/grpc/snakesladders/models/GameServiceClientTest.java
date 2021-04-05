@@ -5,6 +5,8 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.snakesladders.engine.GameEngine;
@@ -14,6 +16,8 @@ import org.junit.jupiter.api.*;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 class GameServiceClientTest {
@@ -61,24 +65,30 @@ class GameServiceClientTest {
     }
 
     @Test
-    void gameTest() {
+    void gameTest() throws InterruptedException {
         //given
-        TestGameStateStreamObserver gameStateResponseObserver = new TestGameStateStreamObserver();
+        TestResultWrapper testResult = new TestResultWrapper();
+        TestGameStateStreamObserver gameStateResponseObserver = new TestGameStateStreamObserver(testResult, countDownLatch);
         StreamObserver<Die> clientDieStreamObserver = nonBlockingStub.roll(gameStateResponseObserver);
         gameStateResponseObserver.setDieStreamObserver(clientDieStreamObserver);
 
         //when
-        int dieValue = ThreadLocalRandom.current().nextInt(1, 7);
-        Die firstDie = Die.newBuilder().setValue(dieValue).build();
-        clientDieStreamObserver.onNext(firstDie);
+        gameStateResponseObserver.roll();
 
         //then
-
+        countDownLatch.await();
+        GameState finalGameState = testResult.getGameState();
+        assertThat(finalGameState.getPlayerList())
+                .anySatisfy(p -> assertThat(p.getPosition()).isEqualTo(TestGameStateStreamObserver.FINAL_POSITION));
     }
 
-    private class TestGameStateStreamObserver implements StreamObserver<GameState> {
+    @RequiredArgsConstructor
+    private static class TestGameStateStreamObserver implements StreamObserver<GameState> {
 
         public static final int FINAL_POSITION = 100;
+
+        private final TestResultWrapper testResult;
+        private final CountDownLatch latch;
 
         @Setter
         private StreamObserver<Die> dieStreamObserver;
@@ -89,13 +99,25 @@ class GameServiceClientTest {
             Player client = gameState.getPlayer(0);
             Player server = gameState.getPlayer(1);
 
-            if (client.getPosition() == FINAL_POSITION || server.getPosition() == FINAL_POSITION) {
+            testResult.setGameState(gameState);
+
+            gameState.getPlayerList()
+                    .forEach(p -> log.debug("{} : {}", p.getName(), p.getPosition()));
+            boolean gameOver = gameState.getPlayerList()
+                    .stream()
+                    .anyMatch(p -> p.getPosition() == FINAL_POSITION);
+
+            if (gameOver) {
                 log.debug("Game Over");
                 String winner = client.getPosition() == FINAL_POSITION ? client.getName() : server.getName();
                 log.debug("{} wins", winner);
                 dieStreamObserver.onCompleted();
                 return;
             }
+            roll();
+        }
+
+        public void roll() {
             dieStreamObserver.onNext(newDie());
         }
 
@@ -107,15 +129,21 @@ class GameServiceClientTest {
         @Override
         public void onError(Throwable t) {
             log.error("Exception occurred", t);
-            countDownLatch.countDown();
+            latch.countDown();
             dieStreamObserver.onCompleted();
         }
 
         @Override
         public void onCompleted() {
             log.debug("onCompleted");
-            countDownLatch.countDown();
+            latch.countDown();
 //            dieStreamObserver.onCompleted();
         }
+    }
+
+    @Getter
+    @Setter
+    private static class TestResultWrapper {
+        private GameState gameState;
     }
 }
