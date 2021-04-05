@@ -203,4 +203,5 @@ message Person{
     -   `IPv4-адрес. . . . . . . . . . . . : 172.22.0.1`
     -  **SO**
     -  `server 172.22.0.1:6565;` - **works**
-           
+    -  `server host.docker.internal:6365;`
+-  **host.docker.internal**           
