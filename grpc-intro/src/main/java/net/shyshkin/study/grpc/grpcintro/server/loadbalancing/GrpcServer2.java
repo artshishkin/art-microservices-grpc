@@ -9,14 +9,14 @@ import net.shyshkin.study.grpc.grpcintro.server.rpctypes.BankService;
 import java.io.IOException;
 
 @Slf4j
-public class GrpcServer {
+public class GrpcServer2 {
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
         AccountDatabase accountDatabase = new AccountDatabase();
 
         Server server = ServerBuilder
-                .forPort(6565)
+                .forPort(7575)
                 .addService(new BankService(accountDatabase))
                 .build();
 
