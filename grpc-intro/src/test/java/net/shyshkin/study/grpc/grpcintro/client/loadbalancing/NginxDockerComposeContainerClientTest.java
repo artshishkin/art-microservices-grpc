@@ -37,9 +37,9 @@ public class NginxDockerComposeContainerClientTest {
     private static final int NGINX_PORT = 8585;
 
     @Container
-    public static DockerComposeContainer environment =
-            new DockerComposeContainer(Path.of("./../nginx/docker-compose.yml").toAbsolutePath().normalize().toFile())
-//                    .withExposedService("nginx_1", NGINX_PORT)
+    public static DockerComposeContainer<?> environment =
+            new DockerComposeContainer<>(Path.of("./../nginx/docker-compose.yml").toAbsolutePath().normalize().toFile())
+                    .withExposedService("nginx_1", NGINX_PORT)
                     .withLocalCompose(true);
 
     private static BankServiceGrpc.BankServiceBlockingStub blockingStub;
@@ -73,10 +73,10 @@ public class NginxDockerComposeContainerClientTest {
 
         log.debug("All {} servers started successfully", SERVERS_COUNT);
 
-//        Integer nginxPort = environment.getServicePort("nginx_1", NGINX_PORT);
-        Integer nginxPort = NGINX_PORT;
-//        String nginxHost = environment.getServiceHost("nginx_1", NGINX_PORT);
-        String nginxHost = "localhost";
+        Integer nginxPort = environment.getServicePort("nginx_1", NGINX_PORT);
+//        Integer nginxPort = NGINX_PORT;
+        String nginxHost = environment.getServiceHost("nginx_1", NGINX_PORT);
+//        String nginxHost = "localhost";
         log.debug("Nginx started on {}:{}", nginxHost, nginxPort);
 
         ManagedChannel managedChannel = ManagedChannelBuilder
