@@ -1,4 +1,4 @@
-package net.shyshkin.study.grpc.grpcintro.server;
+package net.shyshkin.study.grpc.grpcintro.server.rpctypes;
 
 import java.util.Map;
 import java.util.function.Function;

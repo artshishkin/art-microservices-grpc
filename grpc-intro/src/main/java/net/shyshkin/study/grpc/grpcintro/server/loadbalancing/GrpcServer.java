@@ -1,8 +1,10 @@
-package net.shyshkin.study.grpc.grpcintro.server;
+package net.shyshkin.study.grpc.grpcintro.server.loadbalancing;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import lombok.extern.slf4j.Slf4j;
+import net.shyshkin.study.grpc.grpcintro.server.rpctypes.AccountDatabase;
+import net.shyshkin.study.grpc.grpcintro.server.rpctypes.BankService;
 
 import java.io.IOException;
 
@@ -16,7 +18,6 @@ public class GrpcServer {
         Server server = ServerBuilder
                 .forPort(6565)
                 .addService(new BankService(accountDatabase))
-                .addService(new TransferService(accountDatabase))
                 .build();
 
         server.start();

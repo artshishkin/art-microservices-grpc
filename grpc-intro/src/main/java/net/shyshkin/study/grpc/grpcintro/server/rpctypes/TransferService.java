@@ -1,4 +1,4 @@
-package net.shyshkin.study.grpc.grpcintro.server;
+package net.shyshkin.study.grpc.grpcintro.server.rpctypes;
 
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;

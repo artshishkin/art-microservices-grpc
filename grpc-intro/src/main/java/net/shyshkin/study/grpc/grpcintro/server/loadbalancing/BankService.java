@@ -1,9 +1,11 @@
-package net.shyshkin.study.grpc.grpcintro.server;
+package net.shyshkin.study.grpc.grpcintro.server.loadbalancing;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.grpcintro.models.*;
+import net.shyshkin.study.grpc.grpcintro.server.rpctypes.AccountDatabase;
+import net.shyshkin.study.grpc.grpcintro.server.rpctypes.DepositStreamObserver;
 
 @Slf4j
 public class BankService extends BankServiceGrpc.BankServiceImplBase {

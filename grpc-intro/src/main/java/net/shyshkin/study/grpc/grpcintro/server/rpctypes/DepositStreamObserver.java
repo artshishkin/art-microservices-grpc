@@ -1,4 +1,4 @@
-package net.shyshkin.study.grpc.grpcintro.server;
+package net.shyshkin.study.grpc.grpcintro.server.rpctypes;
 
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
@@ -6,7 +6,7 @@ import net.shyshkin.study.grpc.grpcintro.models.Balance;
 import net.shyshkin.study.grpc.grpcintro.models.DepositRequest;
 
 @Slf4j
-class DepositStreamObserver implements StreamObserver<DepositRequest> {
+public class DepositStreamObserver implements StreamObserver<DepositRequest> {
 
     private final StreamObserver<Balance> responseObserver;
     private final AccountDatabase accountDatabase;

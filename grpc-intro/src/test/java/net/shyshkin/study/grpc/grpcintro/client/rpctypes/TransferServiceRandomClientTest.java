@@ -1,4 +1,4 @@
-package net.shyshkin.study.grpc.grpcintro.server;
+package net.shyshkin.study.grpc.grpcintro.client.rpctypes;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.grpcintro.models.TransferRequest;
 import net.shyshkin.study.grpc.grpcintro.models.TransferResponse;
 import net.shyshkin.study.grpc.grpcintro.models.TransferServiceGrpc;
+import net.shyshkin.study.grpc.grpcintro.server.rpctypes.AccountDatabase;
+import net.shyshkin.study.grpc.grpcintro.server.rpctypes.TransferService;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package net.shyshkin.study.grpc.grpcintro.server;
+package net.shyshkin.study.grpc.grpcintro.client.rpctypes;
 
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.grpc.*;
@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.grpcintro.models.Balance;
 import net.shyshkin.study.grpc.grpcintro.models.BalanceCheckRequest;
 import net.shyshkin.study.grpc.grpcintro.models.BankServiceGrpc;
+import net.shyshkin.study.grpc.grpcintro.server.rpctypes.AccountDatabase;
+import net.shyshkin.study.grpc.grpcintro.server.rpctypes.BankService;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
