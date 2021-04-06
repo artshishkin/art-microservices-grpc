@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.grpcintro.models.*;
 import net.shyshkin.study.grpc.grpcintro.server.rpctypes.AccountDatabase;
-import net.shyshkin.study.grpc.grpcintro.server.rpctypes.DepositStreamObserver;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -56,7 +55,7 @@ public class BankService extends BankServiceGrpc.BankServiceImplBase {
 
     @Override
     public StreamObserver<DepositRequest> deposit(StreamObserver<Balance> responseObserver) {
-        return new DepositStreamObserver(responseObserver, accountDatabase);
+        return new DepositStreamObserver(responseObserver, accountDatabase, serverPort);
     }
 
 }

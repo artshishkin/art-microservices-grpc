@@ -2,18 +2,18 @@ package net.shyshkin.study.grpc.grpcintro.client.loadbalancing;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.grpcintro.models.Balance;
 import net.shyshkin.study.grpc.grpcintro.models.BalanceCheckRequest;
 import net.shyshkin.study.grpc.grpcintro.models.BankServiceGrpc;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import net.shyshkin.study.grpc.grpcintro.models.DepositRequest;
+import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,10 +21,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
 @DisplayName("Manually start GrpcServer1, GrpcServer2 and docker-compose with nginx then run test")
-@Disabled("Only for manual testing")
+//@Disabled("Only for manual testing")
 public class NginxManualClientTest {
 
     private static BankServiceGrpc.BankServiceBlockingStub blockingStub;
+    private static BankServiceGrpc.BankServiceStub nonBlockingStub;
 
     @BeforeAll
     static void beforeAll() throws IOException {
@@ -35,10 +36,12 @@ public class NginxManualClientTest {
                 .build();
 
         blockingStub = BankServiceGrpc.newBlockingStub(managedChannel);
-        log.debug("Initialized Blocking Stub");
+        nonBlockingStub = BankServiceGrpc.newStub(managedChannel);
+        log.debug("Initialized Stubs");
     }
 
     @Test
+    @DisplayName("Every gRPC requests sends to different server due to LoadBalancing of Nginx")
     void balanceTest() {
         //given
         int totalRequestCount = 30;
@@ -68,5 +71,49 @@ public class NginxManualClientTest {
                                 .isGreaterThan(totalRequestCount / 3)
                                 .isLessThan(2 * totalRequestCount / 3)
                 );
+    }
+
+    @Nested
+    class DepositTest {
+
+        private CountDownLatch countDownLatch;
+
+        @BeforeEach
+        void setUp() {
+            countDownLatch = new CountDownLatch(1);
+        }
+
+        @AfterEach
+        void tearDown() throws InterruptedException {
+            countDownLatch.await();
+        }
+
+        @Test
+        @DisplayName("We have only ONE gRPC request so every chunk goes to ONE server despite LoadBalancing of Nginx")
+        void depositTest() throws InterruptedException {
+            //given
+            int accountNumber = 9;
+            int depositCount = 4;
+            int chunkAmount = 10;
+            int expectedBalance = accountNumber * 111 + depositCount * chunkAmount;
+
+            TestResultWrapper testResultWrapper = new TestResultWrapper();
+
+            StreamObserver<Balance> observer = new TestDepositBalanceStreamObserver(accountNumber, testResultWrapper,countDownLatch);
+
+            //when
+            StreamObserver<DepositRequest> depositClient = nonBlockingStub.deposit(observer);
+
+            for (int i = 0; i < depositCount; i++) {
+                DepositRequest depositRequest = DepositRequest.newBuilder()
+                        .setAccountNumber(accountNumber)
+                        .setAmount(chunkAmount)
+                        .build();
+                depositClient.onNext(depositRequest);
+            }
+            depositClient.onCompleted();
+            countDownLatch.await();
+            assertThat(testResultWrapper.getBalance()).isEqualTo(expectedBalance);
+        }
     }
 }
