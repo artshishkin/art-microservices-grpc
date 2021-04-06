@@ -147,7 +147,7 @@ class DeadlineClientTest {
     }
 
     @Test
-    @DisplayName("If we are catching deadline exception and do not tell server about it, server continues sending stream to us")
+    @DisplayName("FIXED - If we are catching deadline exception and do not tell server about it, server continues sending stream to us")
     void withdrawTest_weiredStuff() {
         //given
         WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
@@ -157,7 +157,7 @@ class DeadlineClientTest {
         //when
         try {
             Iterator<Money> moneyIterator = blockingStub
-                    .withDeadlineAfter(300, TimeUnit.MILLISECONDS)
+                    .withDeadlineAfter(700, TimeUnit.MILLISECONDS)
                     .withdraw(withdrawRequest);
             List<Money> moneyList = new ArrayList<>();
             moneyIterator.forEachRemaining(moneyList::add);

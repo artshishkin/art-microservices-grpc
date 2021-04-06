@@ -1,6 +1,7 @@
 package net.shyshkin.study.grpc.grpcintro.server.deadline;
 
 import com.google.common.util.concurrent.Uninterruptibles;
+import io.grpc.Context;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +55,8 @@ public class DeadlineService extends BankServiceGrpc.BankServiceImplBase {
 
             //simulate time-consuming load
             Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
+
+            if (Context.current().isCancelled()) break;
 
             int deductBalance = accountDatabase.deductBalance(accountId, 10);
             responseObserver.onNext(money);
