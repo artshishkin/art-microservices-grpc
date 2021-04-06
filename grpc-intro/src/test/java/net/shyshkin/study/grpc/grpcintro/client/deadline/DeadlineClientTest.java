@@ -9,13 +9,12 @@ import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,20 +52,45 @@ class DeadlineClientTest {
         server.shutdown();
     }
 
-    @ParameterizedTest
-    @ValueSource(ints = {3, 5, 7})
-    void balanceTest(int accountNumber) {
+    @Test
+    void balanceTest_OK() {
         //given
+        int accountNumber = 33;
         BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
                 .setAccountNumber(accountNumber)
                 .build();
 
         //when
-        Balance balance = blockingStub.getBalance(balanceCheckRequest);
+        Balance balance = blockingStub
+                .withDeadlineAfter(1, TimeUnit.SECONDS)
+                .getBalance(balanceCheckRequest);
 
         //then
         log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
         assertEquals(accountNumber * 111, balance.getAmount());
+    }
+
+
+    @Test
+    void balanceTest_withDeadLineExceeded() {
+        //given
+        int accountNumber = 8;
+        BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
+                .setAccountNumber(accountNumber)
+                .build();
+
+        //when
+        ThrowableAssert.ThrowingCallable exec = () -> {
+            Balance balance = blockingStub
+                    .withDeadlineAfter(100, TimeUnit.MILLISECONDS)
+                    .getBalance(balanceCheckRequest);
+            log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
+        };
+
+        //then
+        assertThatThrownBy(exec)
+                .isInstanceOf(StatusRuntimeException.class)
+                .hasMessageContaining("DEADLINE_EXCEEDED: deadline exceeded after");
     }
 
     @Test
