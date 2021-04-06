@@ -7,7 +7,10 @@ import net.shyshkin.study.grpc.grpcintro.models.*;
 import net.shyshkin.study.grpc.grpcintro.server.deadline.DeadlineService;
 import net.shyshkin.study.grpc.grpcintro.server.rpctypes.AccountDatabase;
 import org.assertj.core.api.ThrowableAssert;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.testcontainers.shaded.com.google.common.util.concurrent.Uninterruptibles;
 
 import java.io.IOException;
@@ -192,7 +195,6 @@ class DeadlineClientTest {
     }
 
     @Test
-    @Disabled("Broken test")
     void withdrawTest_nonBlocking_OK() throws InterruptedException {
         //given
         int accountNumber = 10;
