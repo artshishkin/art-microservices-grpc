@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
 @DisplayName("Client Side LB - Manually start GrpcServer1, GrpcServer2 then run test")
-//@Disabled("Only for manual testing")
+@Disabled("Only for manual testing")
 public class ClientSideLoadBalancerManualTest {
 
     private static BankServiceGrpc.BankServiceBlockingStub blockingStub;
