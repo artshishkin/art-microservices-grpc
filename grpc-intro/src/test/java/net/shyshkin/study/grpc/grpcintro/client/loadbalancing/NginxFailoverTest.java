@@ -111,7 +111,7 @@ public class NginxFailoverTest {
                     .build();
             Balance balance = blockingStub.getBalance(balanceCheckRequest);
 
-            Thread.sleep(7);
+            Thread.sleep(10);
 
             if (i == totalRequestCount / 5)
                 servers.get(0).shutdown();
