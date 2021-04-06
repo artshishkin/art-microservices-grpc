@@ -14,7 +14,6 @@ import net.shyshkin.study.grpc.grpcintro.models.BankServiceGrpc;
 import net.shyshkin.study.grpc.grpcintro.models.DepositRequest;
 import org.junit.jupiter.api.*;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -32,7 +31,7 @@ public class ClientSideLoadBalancerManualTest {
     private static BankServiceGrpc.BankServiceStub nonBlockingStub;
 
     @BeforeAll
-    static void beforeAll() throws IOException {
+    static void beforeAll() {
 
         ServiceRegistry serviceRegistry = new SimpleMapServiceRegistry();
         serviceRegistry.registerInstance("bank-service", "localhost:6363");
@@ -43,6 +42,7 @@ public class ClientSideLoadBalancerManualTest {
 
         ManagedChannel managedChannel = ManagedChannelBuilder
                 .forTarget("bank-service")
+                .defaultLoadBalancingPolicy("round_robin")
                 .usePlaintext()
                 .build();
 
@@ -52,7 +52,6 @@ public class ClientSideLoadBalancerManualTest {
     }
 
     @Test
-    @Disabled("Failed for default load-balancing policy ( PICK_FIRST )")
     @DisplayName("Every gRPC requests sends to different server due to LoadBalancing")
     void balanceTest() {
         //given
@@ -101,7 +100,7 @@ public class ClientSideLoadBalancerManualTest {
         }
 
         @Test
-        @DisplayName("We have only ONE gRPC request so every chunk goes to ONE server despite")
+        @DisplayName("We have only ONE gRPC request so every chunk goes to ONE server despite LoadBalancing")
         void depositTest() throws InterruptedException {
             //given
             int accountNumber = 9;
