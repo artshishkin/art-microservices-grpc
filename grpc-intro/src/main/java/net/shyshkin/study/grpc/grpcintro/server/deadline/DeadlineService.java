@@ -51,6 +51,10 @@ public class DeadlineService extends BankServiceGrpc.BankServiceImplBase {
             Money money = Money.newBuilder()
                     .setValue(10)
                     .build();
+
+            //simulate time-consuming load
+            Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
+
             int deductBalance = accountDatabase.deductBalance(accountId, 10);
             responseObserver.onNext(money);
             log.debug("withdraw {}", money);
