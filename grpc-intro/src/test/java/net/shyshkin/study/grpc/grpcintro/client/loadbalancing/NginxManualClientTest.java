@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
 @DisplayName("Manually start GrpcServer1, GrpcServer2 and docker-compose with nginx then run test")
-//@Disabled("Only for manual testing")
+@Disabled("Only for manual testing")
 public class NginxManualClientTest {
 
     private static BankServiceGrpc.BankServiceBlockingStub blockingStub;
