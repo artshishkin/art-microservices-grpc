@@ -113,7 +113,7 @@ public class NginxManualClientTest {
             }
             depositClient.onCompleted();
             countDownLatch.await();
-            assertThat(testResultWrapper.getBalance()).isEqualTo(expectedBalance);
+            assertThat(testResultWrapper.getBalance().getAmount()).isEqualTo(expectedBalance);
         }
     }
 }

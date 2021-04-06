@@ -15,12 +15,12 @@ class TestDepositBalanceStreamObserver implements StreamObserver<Balance> {
     private final TestResultWrapper testResultWrapper;
     private final CountDownLatch latch;
 
-    private int receivedBalance = 0;
+    private Balance receivedBalance = Balance.newBuilder().build();
 
     @Override
-    public void onNext(Balance value) {
-        receivedBalance = value.getAmount();
-        log.debug("Received balance: {} for user {}", receivedBalance, accountNumber);
+    public void onNext(Balance balance) {
+        receivedBalance = balance;
+        log.debug("Received balance: {} for user {}", receivedBalance.getAmount(), accountNumber);
     }
 
     @Override

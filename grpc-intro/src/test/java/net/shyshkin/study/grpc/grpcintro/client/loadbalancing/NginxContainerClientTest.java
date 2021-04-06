@@ -20,10 +20,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -170,7 +167,52 @@ public class NginxContainerClientTest {
             }
             depositClient.onCompleted();
             countDownLatch.await();
-            assertThat(testResultWrapper.getBalance()).isEqualTo(expectedBalance);
+            assertThat(testResultWrapper.getBalance().getAmount()).isEqualTo(expectedBalance);
+        }
+
+        @Test
+        @DisplayName("MANY gRPC requests goes to different servers due to LoadBalancing of Nginx")
+        void depositTestManyGrpcRequests() throws InterruptedException {
+            //given
+            Set<Integer> serversPorts = new HashSet<>(SERVERS_COUNT);
+
+            for (int serverIdx = 0; serverIdx < SERVERS_COUNT; serverIdx++) {
+
+                if (serverIdx != 0) countDownLatch = new CountDownLatch(1);
+
+                int accountNumber = 3;
+                int depositCount = 4;
+                int chunkAmount = 10;
+                int expectedBalance = accountNumber * 111 + depositCount * chunkAmount * (1 + serverIdx);
+
+                TestResultWrapper testResultWrapper = new TestResultWrapper();
+
+                StreamObserver<Balance> observer = new TestDepositBalanceStreamObserver(accountNumber, testResultWrapper, countDownLatch);
+
+                //when
+                StreamObserver<DepositRequest> depositClient = nonBlockingStub.deposit(observer);
+
+                for (int i = 0; i < depositCount; i++) {
+                    DepositRequest depositRequest = DepositRequest.newBuilder()
+                            .setAccountNumber(accountNumber)
+                            .setAmount(chunkAmount)
+                            .build();
+                    depositClient.onNext(depositRequest);
+                }
+                depositClient.onCompleted();
+                countDownLatch.await();
+                assertThat(testResultWrapper.getBalance().getAmount()).isEqualTo(expectedBalance);
+                int serverPort = testResultWrapper.getBalance().getServerPort();
+                serversPorts.add(serverPort);
+            }
+            log.debug("Servers are on ports: {}", serversPorts);
+            assertThat(serversPorts)
+                    .hasSize(SERVERS_COUNT)
+                    .allSatisfy(
+                            port -> assertThat(port)
+                                    .isGreaterThanOrEqualTo(SERVERS_PORT_START)
+                                    .isLessThan(SERVERS_PORT_START + SERVERS_COUNT)
+                    );
         }
     }
 }
