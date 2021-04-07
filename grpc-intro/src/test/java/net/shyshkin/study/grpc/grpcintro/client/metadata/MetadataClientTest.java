@@ -4,8 +4,8 @@ import io.grpc.*;
 import io.grpc.stub.MetadataUtils;
 import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.grpcintro.models.*;
-import net.shyshkin.study.grpc.grpcintro.server.deadline.DeadlineService;
 import net.shyshkin.study.grpc.grpcintro.server.metadata.AuthInterceptor;
+import net.shyshkin.study.grpc.grpcintro.server.metadata.MetadataService;
 import net.shyshkin.study.grpc.grpcintro.server.rpctypes.AccountDatabase;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.AfterEach;
@@ -49,7 +49,7 @@ class MetadataClientTest {
         server = ServerBuilder
                 .forPort(6363)
                 .intercept(new AuthInterceptor(token))
-                .addService(new DeadlineService(accountDatabase))
+                .addService(new MetadataService(accountDatabase))
                 .build();
 
         log.debug("Starting gRPC server");
