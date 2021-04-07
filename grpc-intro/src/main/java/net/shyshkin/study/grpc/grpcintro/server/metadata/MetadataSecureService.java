@@ -1,16 +1,15 @@
 package net.shyshkin.study.grpc.grpcintro.server.metadata;
 
-import com.google.common.util.concurrent.Uninterruptibles;
 import io.grpc.Context;
+import io.grpc.Metadata;
 import io.grpc.Status;
+import io.grpc.protobuf.ProtoUtils;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.grpcintro.models.*;
 import net.shyshkin.study.grpc.grpcintro.server.rpctypes.AccountDatabase;
 import net.shyshkin.study.grpc.grpcintro.server.rpctypes.DepositStreamObserver;
-
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -48,10 +47,16 @@ public class MetadataSecureService extends BankServiceGrpc.BankServiceImplBase {
         int amount = request.getAmount();
 
         int availableBalance = accountDatabase.getBalance(accountId);
+
+        if (amount % 10 != 0) {
+            Metadata metadata = buildMetadata(availableBalance, ErrorMessage.ONLY_TEN_MULTIPLE);
+            responseObserver.onError(Status.FAILED_PRECONDITION.asRuntimeException(metadata));
+            return;
+        }
+
         if (availableBalance < amount) {
-            Status status = Status.FAILED_PRECONDITION
-                    .withDescription("Not enough money. You have only " + availableBalance);
-            responseObserver.onError(status.asRuntimeException());
+            Metadata metadata = buildMetadata(availableBalance, ErrorMessage.INSUFFICIENT_BALANCE);
+            responseObserver.onError(Status.FAILED_PRECONDITION.asRuntimeException(metadata));
             return;
         }
 
@@ -60,9 +65,6 @@ public class MetadataSecureService extends BankServiceGrpc.BankServiceImplBase {
                     .setValue(10)
                     .build();
 
-            //simulate time-consuming load
-            Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
-
             if (Context.current().isCancelled()) break;
 
             int deductBalance = accountDatabase.deductBalance(accountId, 10);
@@ -70,6 +72,17 @@ public class MetadataSecureService extends BankServiceGrpc.BankServiceImplBase {
             log.debug("withdraw {}", money);
         }
         responseObserver.onCompleted();
+    }
+
+    private Metadata buildMetadata(int amount, ErrorMessage errorMessage) {
+        Metadata metadata = new Metadata();
+        Metadata.Key<WithdrawalError> errorKey = ProtoUtils.keyForProto(WithdrawalError.getDefaultInstance());
+        WithdrawalError withdrawalError = WithdrawalError.newBuilder()
+                .setAmount(amount)
+                .setErrorMessage(errorMessage)
+                .build();
+        metadata.put(errorKey, withdrawalError);
+        return metadata;
     }
 
     @Override
