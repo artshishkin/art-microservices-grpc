@@ -28,4 +28,8 @@ public class AccountDatabase {
     public int deductBalance(int accountId, int amount) {
         return DB.computeIfPresent(accountId, (k, v) -> v - amount);
     }
+
+    public boolean accountPresent(int accountId) {
+        return DB.containsKey(accountId);
+    }
 }
