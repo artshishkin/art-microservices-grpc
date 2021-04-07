@@ -15,7 +15,7 @@ public class AuthInterceptor implements ServerInterceptor {
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> call, Metadata headers, ServerCallHandler<ReqT, RespT> next) {
 
-        String clientToken = headers.get(ServerConstants.TOKEN_KEY);
+        String clientToken = headers.get(ServerConstants.USER_TOKEN_KEY);
         log.debug("Client token is `{}`", clientToken);
 
         if (validate(clientToken))
