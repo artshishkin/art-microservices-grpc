@@ -45,7 +45,7 @@ class MetadataClientTest {
         blockingStub = BankServiceGrpc.newBlockingStub(managedChannel);
     }
 
-    private static void startServerWIthClientToken(String token) throws IOException {
+    private static void startServerWithClientToken(String token) throws IOException {
         server = ServerBuilder
                 .forPort(6363)
                 .intercept(new AuthInterceptor(token))
@@ -66,7 +66,7 @@ class MetadataClientTest {
     @DisplayName("When tokens on client and server sides match request should be processed")
     void balanceTest_OK() throws IOException {
         //given
-        startServerWIthClientToken(VALID_TOKEN);
+        startServerWithClientToken(VALID_TOKEN);
 
         int accountNumber = 33;
         BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
@@ -75,6 +75,7 @@ class MetadataClientTest {
 
         //when
         Balance balance = blockingStub
+                .withCallCredentials(new UserSessionToken(VALID_TOKEN))
                 .getBalance(balanceCheckRequest);
 
         //then
@@ -83,10 +84,10 @@ class MetadataClientTest {
     }
 
     @Test
-    @DisplayName("When tokens on client and server sides do not match request should be rejected")
-    void balanceTest_FAIL() throws IOException {
+    @DisplayName("Request without JWT token should be rejected")
+    void balanceTest_withoutToken() throws IOException {
         //given
-        startServerWIthClientToken(INVALID_TOKEN);
+        startServerWithClientToken(VALID_TOKEN);
 
         int accountNumber = 33;
         BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
@@ -107,9 +108,34 @@ class MetadataClientTest {
     }
 
     @Test
+    @DisplayName("Request with INVALID JWT token should be rejected")
+    void balanceTest_invalidToken() throws IOException {
+        //given
+        startServerWithClientToken(VALID_TOKEN);
+
+        int accountNumber = 33;
+        BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
+                .setAccountNumber(accountNumber)
+                .build();
+
+        //when
+        ThrowableAssert.ThrowingCallable exec = () -> {
+            Balance balance = blockingStub
+                    .withCallCredentials(new UserSessionToken(INVALID_TOKEN))
+                    .getBalance(balanceCheckRequest);
+            log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
+            assertEquals(accountNumber * 111, balance.getAmount());
+        };
+
+        //then
+        assertThatThrownBy(exec).isInstanceOf(StatusRuntimeException.class)
+                .hasMessage("UNAUTHENTICATED: invalid/expired token");
+    }
+
+    @Test
     void withdrawTest_validToken() throws IOException {
         //given
-        startServerWIthClientToken(VALID_TOKEN);
+        startServerWithClientToken(VALID_TOKEN);
 
         WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
                 .setAccountNumber(10)
@@ -118,6 +144,7 @@ class MetadataClientTest {
 
         //when
         Iterator<Money> moneyIterator = blockingStub
+                .withCallCredentials(new UserSessionToken(VALID_TOKEN))
                 .withdraw(withdrawRequest);
 
         //then
@@ -128,9 +155,9 @@ class MetadataClientTest {
     }
 
     @Test
-    void withdrawTest_fail() throws IOException {
+    void withdrawTest_withoutToken() throws IOException {
         //given
-        startServerWIthClientToken(INVALID_TOKEN);
+        startServerWithClientToken(VALID_TOKEN);
 
         WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
                 .setAccountNumber(10)
@@ -140,6 +167,33 @@ class MetadataClientTest {
         //when
         ThrowableAssert.ThrowingCallable exec = () -> {
             Iterator<Money> moneyIterator = blockingStub
+                    .withdraw(withdrawRequest);
+            List<Money> moneyList = new ArrayList<>();
+            moneyIterator.forEachRemaining(moneyList::add);
+            assertEquals(4, moneyList.size());
+            moneyList.forEach(money -> assertEquals(10, money.getValue()));
+        };
+
+        //then
+        assertThatThrownBy(exec)
+                .isInstanceOf(StatusRuntimeException.class)
+                .hasMessage("UNAUTHENTICATED: invalid/expired token");
+    }
+
+    @Test
+    void withdrawTest_invalidToken() throws IOException {
+        //given
+        startServerWithClientToken(VALID_TOKEN);
+
+        WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
+                .setAccountNumber(10)
+                .setAmount(40)
+                .build();
+
+        //when
+        ThrowableAssert.ThrowingCallable exec = () -> {
+            Iterator<Money> moneyIterator = blockingStub
+                    .withCallCredentials(new UserSessionToken(INVALID_TOKEN))
                     .withdraw(withdrawRequest);
             List<Money> moneyList = new ArrayList<>();
             moneyIterator.forEachRemaining(moneyList::add);
