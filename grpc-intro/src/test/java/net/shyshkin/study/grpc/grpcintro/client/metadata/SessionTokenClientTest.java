@@ -9,6 +9,7 @@ import net.shyshkin.study.grpc.grpcintro.server.rpctypes.AccountDatabase;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -179,74 +181,198 @@ class SessionTokenClientTest {
         }
     }
 
-    @Test
-    void withdrawTest_validToken() {
+    @Nested
+    class ServerStreamingTest {
 
-        //given
-        WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
-                .setAccountNumber(10)
-                .setAmount(40)
-                .build();
+        @Test
+        void withdrawTest_validToken() {
 
-        //when
-        Iterator<Money> moneyIterator = blockingStub
-                .withCallCredentials(new UserSessionToken("user-token-10:standard"))
-                .withdraw(withdrawRequest);
+            //given
+            WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
+                    .setAccountNumber(10)
+                    .setAmount(40)
+                    .build();
 
-        //then
-        List<Money> moneyList = new ArrayList<>();
-        moneyIterator.forEachRemaining(moneyList::add);
-        assertEquals(4, moneyList.size());
-        moneyList.forEach(money -> assertEquals(10, money.getValue()));
-    }
-
-    @Test
-    void withdrawTest_withoutToken() {
-        //given
-        WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
-                .setAccountNumber(10)
-                .setAmount(40)
-                .build();
-
-        //when
-        ThrowableAssert.ThrowingCallable exec = () -> {
+            //when
             Iterator<Money> moneyIterator = blockingStub
+                    .withCallCredentials(new UserSessionToken("user-token-10:standard"))
                     .withdraw(withdrawRequest);
+
+            //then
             List<Money> moneyList = new ArrayList<>();
             moneyIterator.forEachRemaining(moneyList::add);
             assertEquals(4, moneyList.size());
             moneyList.forEach(money -> assertEquals(10, money.getValue()));
-        };
+        }
 
-        //then
-        assertThatThrownBy(exec)
-                .isInstanceOf(StatusRuntimeException.class)
-                .hasMessage("UNAUTHENTICATED: invalid/expired token");
-    }
+        @Test
+        void withdrawTest_withoutToken() {
+            //given
+            WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
+                    .setAccountNumber(10)
+                    .setAmount(40)
+                    .build();
 
-    @Test
-    void withdrawTest_invalidToken() throws IOException {
+            //when
+            ThrowableAssert.ThrowingCallable exec = () -> {
+                Iterator<Money> moneyIterator = blockingStub
+                        .withdraw(withdrawRequest);
+                List<Money> moneyList = new ArrayList<>();
+                moneyIterator.forEachRemaining(moneyList::add);
+                assertEquals(4, moneyList.size());
+                moneyList.forEach(money -> assertEquals(10, money.getValue()));
+            };
 
-        //given
-        WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
-                .setAccountNumber(10)
-                .setAmount(40)
-                .build();
+            //then
+            assertThatThrownBy(exec)
+                    .isInstanceOf(StatusRuntimeException.class)
+                    .hasMessage("UNAUTHENTICATED: invalid/expired token");
+        }
 
-        //when
-        ThrowableAssert.ThrowingCallable exec = () -> {
-            Iterator<Money> moneyIterator = blockingStub
-                    .withCallCredentials(new UserSessionToken("user-token-444:prime"))
-                    .withdraw(withdrawRequest);
-            List<Money> moneyList = new ArrayList<>();
-            moneyIterator.forEachRemaining(moneyList::add);
-            assertEquals(4, moneyList.size());
-            moneyList.forEach(money -> assertEquals(10, money.getValue()));
-        };
+        @Test
+        void withdrawTest_invalidToken() throws IOException {
 
-        //then
-        assertThatThrownBy(exec)
-                .isInstanceOf(StatusRuntimeException.class)
-                .hasMessage("UNAUTHENTICATED: invalid/expired token");
+            //given
+            WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
+                    .setAccountNumber(10)
+                    .setAmount(40)
+                    .build();
+
+            //when
+            ThrowableAssert.ThrowingCallable exec = () -> {
+                Iterator<Money> moneyIterator = blockingStub
+                        .withCallCredentials(new UserSessionToken("user-token-444:prime"))
+                        .withdraw(withdrawRequest);
+                List<Money> moneyList = new ArrayList<>();
+                moneyIterator.forEachRemaining(moneyList::add);
+                assertEquals(4, moneyList.size());
+                moneyList.forEach(money -> assertEquals(10, money.getValue()));
+            };
+
+            //then
+            assertThatThrownBy(exec)
+                    .isInstanceOf(StatusRuntimeException.class)
+                    .hasMessage("UNAUTHENTICATED: invalid/expired token");
+        }
+
+
+        @ParameterizedTest
+        @CsvSource(value = {
+                "66,ONLY_TEN_MULTIPLE",
+                "66000,INSUFFICIENT_BALANCE"
+        })
+        void withdrawTest_wrongAmountToWithdraw_withLog(int amountToWithdraw, ErrorMessage errorMessage) {
+
+            //given
+            int accountId = 77;
+            String token = String.format("user-token-%d:standard", accountId);
+
+            WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
+                    .setAccountNumber(accountId)
+                    .setAmount(amountToWithdraw)
+                    .build();
+
+            //when
+            try {
+                Iterator<Money> moneyIterator = blockingStub
+                        .withCallCredentials(new UserSessionToken(token))
+                        .withdraw(withdrawRequest);
+
+                //then
+                List<Money> moneyList = new ArrayList<>();
+                moneyIterator.forEachRemaining(moneyList::add);
+                log.debug("{}", moneyList.size());
+            } catch (StatusRuntimeException e) {
+                Status status = e.getStatus();
+                Metadata metadata = e.getTrailers();
+                log.debug("Status is {}", status);
+                assertThat(status).isEqualTo(Status.FAILED_PRECONDITION);
+                log.debug("Metadata: {}", metadata);
+                WithdrawalError withdrawalError = metadata.get(ClientConstants.WITHDRAWAL_ERROR_KEY);
+                log.debug("WithdrawalError.amount: {}", withdrawalError.getAmount());
+                assertThat(withdrawalError.getAmount()).isEqualTo(111 * accountId);
+                log.debug("WithdrawalError.errorMessage: {}", withdrawalError.getErrorMessage());
+                assertThat(withdrawalError.getErrorMessage()).isEqualTo(errorMessage);
+            }
+        }
+
+        @ParameterizedTest
+        @CsvSource(value = {
+                "66,ONLY_TEN_MULTIPLE",
+                "66000,INSUFFICIENT_BALANCE"
+        })
+        void withdrawTest_wrongAmountToWithdraw_withLog_fromThrowable(int amountToWithdraw, ErrorMessage errorMessage) {
+
+            //given
+            int accountId = 77;
+            String token = String.format("user-token-%d:standard", accountId);
+
+            WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
+                    .setAccountNumber(accountId)
+                    .setAmount(amountToWithdraw)
+                    .build();
+
+            //when
+            try {
+                Iterator<Money> moneyIterator = blockingStub
+                        .withCallCredentials(new UserSessionToken(token))
+                        .withdraw(withdrawRequest);
+
+                //then
+                List<Money> moneyList = new ArrayList<>();
+                moneyIterator.forEachRemaining(moneyList::add);
+                log.debug("{}", moneyList.size());
+            } catch (Exception e) {
+                Status status = Status.fromThrowable(e);
+                Metadata metadata = Status.trailersFromThrowable(e);
+                log.debug("Status is {}", status);
+                assertThat(status).isEqualTo(Status.FAILED_PRECONDITION);
+                log.debug("Metadata: {}", metadata);
+                WithdrawalError withdrawalError = metadata.get(ClientConstants.WITHDRAWAL_ERROR_KEY);
+                log.debug("WithdrawalError.amount: {}", withdrawalError.getAmount());
+                assertThat(withdrawalError.getAmount()).isEqualTo(111 * accountId);
+                log.debug("WithdrawalError.errorMessage: {}", withdrawalError.getErrorMessage());
+                assertThat(withdrawalError.getErrorMessage()).isEqualTo(errorMessage);
+            }
+        }
+
+        @ParameterizedTest
+        @CsvSource(value = {
+                "66,ONLY_TEN_MULTIPLE",
+                "66000,INSUFFICIENT_BALANCE"
+        })
+        void withdrawTest_wrongAmountToWithdraw(int amountToWithdraw, ErrorMessage errorMessage) {
+
+            //given
+            int accountId = 81;
+            String token = String.format("user-token-%d:standard", accountId);
+
+            WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
+                    .setAccountNumber(accountId)
+                    .setAmount(amountToWithdraw)
+                    .build();
+
+            //when
+            ThrowableAssert.ThrowingCallable exec = () -> {
+                Iterator<Money> moneyIterator = blockingStub
+                        .withCallCredentials(new UserSessionToken(token))
+                        .withdraw(withdrawRequest);
+
+                List<Money> moneyList = new ArrayList<>();
+                moneyIterator.forEachRemaining(moneyList::add);
+                log.debug("{}", moneyList.size());
+            };
+
+            //then
+            assertThatThrownBy(exec)
+                    .isInstanceOf(StatusRuntimeException.class)
+                    .satisfies(exc ->
+                            assertThat(Status.fromThrowable(exc))
+                                    .isEqualTo(Status.FAILED_PRECONDITION))
+                    .satisfies(exc ->
+                            assertThat(Status.trailersFromThrowable(exc).get(ClientConstants.WITHDRAWAL_ERROR_KEY))
+                                    .hasFieldOrPropertyWithValue("amount", accountId * 111)
+                                    .hasFieldOrPropertyWithValue("errorMessage", errorMessage));
+        }
     }
 }
