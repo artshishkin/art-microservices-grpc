@@ -21,12 +21,14 @@ public class AuthInterceptorDB implements ServerInterceptor {
 
         if (validate(clientToken)) {
             UserRole userRole = extractUserRole(clientToken);
-            Context context = Context.current().withValue(
-                    ServerConstants.CTX_USER_ROLE,
-                    userRole
-            );
+            int userId = extractUserId(clientToken);
+            Context context = Context.current()
+                    .withValues(
+                            ServerConstants.CTX_USER_ROLE, userRole,
+                            ServerConstants.CTX_USER_ID, userId
+                    );
+
             return Contexts.interceptCall(context, call, headers, next);
-//            return next.startCall(call, headers);
         }
         Status status = Status.UNAUTHENTICATED.withDescription("invalid/expired token");
         call.close(status, headers);
@@ -67,5 +69,11 @@ public class AuthInterceptorDB implements ServerInterceptor {
         String[] tokenParts = clientToken.split(":");
         String role = tokenParts[1];
         return UserRole.valueOf(role.toUpperCase());
+    }
+
+    private int extractUserId(String clientToken) {
+        String usernameToken = clientToken.split(":")[0];
+        String accountIdString = usernameToken.replace("user-token-", "");
+        return Integer.parseInt(accountIdString);
     }
 }

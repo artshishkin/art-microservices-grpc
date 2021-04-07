@@ -10,6 +10,6 @@ public class ServerConstants {
     public static final Metadata.Key<String> USER_TOKEN_KEY = Metadata.Key.of("user-token", Metadata.ASCII_STRING_MARSHALLER);
 
     public static final Context.Key<UserRole> CTX_USER_ROLE = Context.key("user-role");
-    public static final Context.Key<UserRole> CTX_USER_ROLE_ANOTHER = Context.key("user-role"); //Despite they look similar they are different
 
+    public static final Context.Key<Integer> CTX_USER_ID = Context.key("user-id");
 }

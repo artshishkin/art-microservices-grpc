@@ -22,20 +22,21 @@ public class MetadataSecureService extends BankServiceGrpc.BankServiceImplBase {
     public void getBalance(BalanceCheckRequest request, StreamObserver<Balance> responseObserver) {
         int accountNumber = request.getAccountNumber();
 
-        responseObserver.onNext(retrieveBalanceFromDB(accountNumber));
-        responseObserver.onCompleted();
+        UserRole userRole = ServerConstants.CTX_USER_ROLE.get(); //Like TreadLocal - only current thread can store and retrieve key
+
+        if (UserRole.PRIME.equals(userRole) || ServerConstants.CTX_USER_ID.get() == accountNumber) {
+            responseObserver.onNext(retrieveBalanceFromDB(accountNumber));
+            responseObserver.onCompleted();
+            return;
+        }
+        Status status = Status.PERMISSION_DENIED
+                .withDescription("You have no permissions to process operation");
+
+        responseObserver.onError(status.asRuntimeException());
     }
 
     private Balance retrieveBalanceFromDB(int accountNumber) {
-
         int amount = accountDatabase.getBalance(accountNumber);
-
-        UserRole userRole = ServerConstants.CTX_USER_ROLE.get(); //Like TreadLocal - only current thread can store and retrieve key
-        UserRole userRoleAnother = ServerConstants.CTX_USER_ROLE_ANOTHER.get();
-        log.debug("Despite key content is similar keys are different {}:{}", userRole, userRoleAnother);
-
-        amount = (UserRole.PRIME.equals(userRole)) ? amount : amount - 15;
-
         return Balance.newBuilder()
                 .setAmount(amount)
                 .build();

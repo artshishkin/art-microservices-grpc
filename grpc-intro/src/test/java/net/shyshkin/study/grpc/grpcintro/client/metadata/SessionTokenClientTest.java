@@ -7,10 +7,7 @@ import net.shyshkin.study.grpc.grpcintro.server.metadata.AuthInterceptorDB;
 import net.shyshkin.study.grpc.grpcintro.server.metadata.MetadataSecureService;
 import net.shyshkin.study.grpc.grpcintro.server.rpctypes.AccountDatabase;
 import org.assertj.core.api.ThrowableAssert;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -56,103 +53,134 @@ class SessionTokenClientTest {
         server.shutdown();
     }
 
-    @Test
-    @DisplayName("Valid token request should be processed for PRIME user role fully")
-    void balanceTest_OK_role_prime() throws IOException {
-        //given
-        int accountNumber = 33;
-        String userToken = "user-token-33:prime";
-        BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
-                .setAccountNumber(accountNumber)
-                .build();
+    @Nested
+    class UnaryRequestTests {
 
-        //when
-        Balance balance = blockingStub
-                .withCallCredentials(new UserSessionToken(userToken))
-                .getBalance(balanceCheckRequest);
+        @ParameterizedTest
+        @DisplayName("PRIME user with VALID token has access to all accounts' balances")
+        @ValueSource(ints = {33, 3, 7})
+        void balanceTest_OK_role_prime(int accountNumber) {
+            //given
 
-        //then
-        log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
-        assertEquals(accountNumber * 111, balance.getAmount());
+            String userToken = "user-token-33:prime";
+            BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
+                    .setAccountNumber(accountNumber)
+                    .build();
 
-    }
-
-    @Test
-    @DisplayName("Valid token request should be processed for STANDARD user role decreased by 15")
-    void balanceTest_OK_role_standard() throws IOException {
-        //given
-        int accountNumber = 33;
-        String userToken = "user-token-33:standard";
-        BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
-                .setAccountNumber(accountNumber)
-                .build();
-
-        //when
-        Balance balance = blockingStub
-                .withCallCredentials(new UserSessionToken(userToken))
-                .getBalance(balanceCheckRequest);
-
-        //then
-        log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
-        assertEquals(accountNumber * 111 - 15, balance.getAmount());
-
-    }
-
-    @Test
-    @DisplayName("Request without JWT token should be rejected")
-    void balanceTest_withoutToken() {
-        //given
-        int accountNumber = 33;
-        BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
-                .setAccountNumber(accountNumber)
-                .build();
-
-        //when
-        ThrowableAssert.ThrowingCallable exec = () -> {
+            //when
             Balance balance = blockingStub
+                    .withCallCredentials(new UserSessionToken(userToken))
                     .getBalance(balanceCheckRequest);
+
+            //then
             log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
             assertEquals(accountNumber * 111, balance.getAmount());
-        };
+        }
 
-        //then
-        assertThatThrownBy(exec).isInstanceOf(StatusRuntimeException.class)
-                .hasMessage("UNAUTHENTICATED: invalid/expired token");
-    }
+        @Test
+        @DisplayName("STANDARD user with VALID token has access to his balance")
+        void balanceTest_OK_role_standard() {
 
-    @ParameterizedTest
-    @DisplayName("Request with INVALID token should be rejected")
-    @ValueSource(strings = {
-            "user-token-33:absent-role",
-            "wrong format",
-            "wrong-format:standard",
-            "user-token-k:standard",
-            "user-token-321:standard", //absent
-            "user-token- 1:standard"
-    })
-    void balanceTest_invalidToken(String token) throws IOException {
-        //given
-        int accountNumber = 33;
-        BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
-                .setAccountNumber(accountNumber)
-                .build();
+            //given
+            int accountNumber = 33;
+            String userToken = "user-token-33:standard";
+            BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
+                    .setAccountNumber(accountNumber)
+                    .build();
 
-        //when
-        ThrowableAssert.ThrowingCallable exec = () -> {
+            //when
             Balance balance = blockingStub
-                    .withCallCredentials(new UserSessionToken(token))
+                    .withCallCredentials(new UserSessionToken(userToken))
                     .getBalance(balanceCheckRequest);
+
+            //then
             log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
             assertEquals(accountNumber * 111, balance.getAmount());
-        };
 
-        //then
-        assertThatThrownBy(exec).isInstanceOf(StatusRuntimeException.class)
-                .hasMessage("UNAUTHENTICATED: invalid/expired token");
+        }
+
+        @Test
+        @DisplayName("STANDARD user with VALID token has access to his balance")
+        void balanceTest_NO_PERMISSION_role_standard() {
+
+            //given
+            int accountNumber = 66;
+            String userToken = "user-token-33:standard";
+            BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
+                    .setAccountNumber(accountNumber)
+                    .build();
+
+            //when
+            ThrowableAssert.ThrowingCallable exec = () -> {
+                Balance balance = blockingStub
+                        .withCallCredentials(new UserSessionToken(userToken))
+                        .getBalance(balanceCheckRequest);
+                log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
+                assertEquals(accountNumber * 111, balance.getAmount());
+            };
+
+            //then
+            assertThatThrownBy(exec)
+                    .isInstanceOf(StatusRuntimeException.class)
+                    .hasMessage("PERMISSION_DENIED: You have no permissions to process operation");
+        }
+
+        @Test
+        @DisplayName("Request without JWT token should be rejected")
+        void balanceTest_withoutToken() {
+            //given
+            int accountNumber = 33;
+            BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
+                    .setAccountNumber(accountNumber)
+                    .build();
+
+            //when
+            ThrowableAssert.ThrowingCallable exec = () -> {
+                Balance balance = blockingStub
+                        .getBalance(balanceCheckRequest);
+                log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
+                assertEquals(accountNumber * 111, balance.getAmount());
+            };
+
+            //then
+            assertThatThrownBy(exec).isInstanceOf(StatusRuntimeException.class)
+                    .hasMessage("UNAUTHENTICATED: invalid/expired token");
+        }
+
+        @ParameterizedTest
+        @DisplayName("Request with INVALID token should be rejected")
+        @ValueSource(strings = {
+                "user-token-33:absent-role",
+                "wrong format",
+                "wrong-format:standard",
+                "user-token-k:standard",
+                "user-token-321:standard", //absent
+                "user-token- 1:standard"
+        })
+        void balanceTest_invalidToken(String token) {
+            //given
+            int accountNumber = 33;
+            BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
+                    .setAccountNumber(accountNumber)
+                    .build();
+
+            //when
+            ThrowableAssert.ThrowingCallable exec = () -> {
+                Balance balance = blockingStub
+                        .withCallCredentials(new UserSessionToken(token))
+                        .getBalance(balanceCheckRequest);
+                log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
+                assertEquals(accountNumber * 111, balance.getAmount());
+            };
+
+            //then
+            assertThatThrownBy(exec).isInstanceOf(StatusRuntimeException.class)
+                    .hasMessage("UNAUTHENTICATED: invalid/expired token");
+        }
     }
 
     @Test
-    void withdrawTest_validToken() throws IOException {
+    void withdrawTest_validToken() {
 
         //given
         WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
@@ -173,7 +201,7 @@ class SessionTokenClientTest {
     }
 
     @Test
-    void withdrawTest_withoutToken() throws IOException {
+    void withdrawTest_withoutToken() {
         //given
         WithdrawRequest withdrawRequest = WithdrawRequest.newBuilder()
                 .setAccountNumber(10)
