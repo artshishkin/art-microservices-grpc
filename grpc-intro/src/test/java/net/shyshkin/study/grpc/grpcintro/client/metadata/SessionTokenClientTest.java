@@ -375,4 +375,157 @@ class SessionTokenClientTest {
                                     .hasFieldOrPropertyWithValue("errorMessage", errorMessage));
         }
     }
+
+
+    @Nested
+    class OneOfErrorHandlingTests {
+
+        @ParameterizedTest
+        @DisplayName("PRIME user with VALID token has access to all accounts' balances")
+        @ValueSource(ints = {33, 3, 7})
+        void balanceTest_OK_role_prime(int accountNumber) {
+            //given
+
+            String userToken = "user-token-33:prime";
+            BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
+                    .setAccountNumber(accountNumber)
+                    .build();
+
+            //when
+            BalanceResponse balanceOrError = blockingStub
+                    .withCallCredentials(new UserSessionToken(userToken))
+                    .getBalanceOrError(balanceCheckRequest);
+
+            //then
+            assertThat(balanceOrError.hasBalance()).isTrue();
+            assertThat(balanceOrError.hasError()).isFalse();
+            Balance balance = balanceOrError.getBalance();
+            log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
+            assertEquals(accountNumber * 111, balance.getAmount());
+        }
+
+        @Test
+        @DisplayName("STANDARD user with VALID token has access to his balance")
+        void balanceTest_OK_role_standard() {
+
+            //given
+            int accountNumber = 33;
+            String userToken = "user-token-33:standard";
+            BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
+                    .setAccountNumber(accountNumber)
+                    .build();
+
+            //when
+            BalanceResponse balanceOrError = blockingStub
+                    .withCallCredentials(new UserSessionToken(userToken))
+                    .getBalanceOrError(balanceCheckRequest);
+
+            //then
+            assertThat(balanceOrError.hasBalance()).isTrue();
+            assertThat(balanceOrError.hasError()).isFalse();
+            Balance balance = balanceOrError.getBalance();
+            log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
+            assertEquals(accountNumber * 111, balance.getAmount());
+        }
+
+        @Test
+        @DisplayName("STANDARD user with VALID token has NO access to another balance")
+        void balanceTest_NO_PERMISSION_role_standard() {
+
+            //given
+            int accountNumber = 66;
+            String userToken = "user-token-33:standard";
+            BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
+                    .setAccountNumber(accountNumber)
+                    .build();
+
+            //when
+            BalanceResponse balanceOrError = blockingStub
+                    .withCallCredentials(new UserSessionToken(userToken))
+                    .getBalanceOrError(balanceCheckRequest);
+
+            //then
+            assertThat(balanceOrError.hasBalance()).isFalse();
+            assertThat(balanceOrError.hasError()).isTrue();
+            BalanceRequestError error = balanceOrError.getError();
+            assertThat(error.getErrorMessage()).isEqualTo(ErrorMessage.PERMISSION_DENIED);
+        }
+
+        @Test
+        @DisplayName("STANDARD BLOCKED user with VALID token has NO access to his balance")
+        void balanceTest_BLOCKED_ACCOUNT_role_standard() {
+
+            //given
+            int accountNumber = MetadataSecureService.FAKE_BLOCKED_ACCOUNT_ID;
+            String userToken = String.format("user-token-%d:standard", accountNumber);
+            BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
+                    .setAccountNumber(accountNumber)
+                    .build();
+
+            //when
+            BalanceResponse balanceOrError = blockingStub
+                    .withCallCredentials(new UserSessionToken(userToken))
+                    .getBalanceOrError(balanceCheckRequest);
+
+            //then
+            assertThat(balanceOrError.hasBalance()).isFalse();
+            assertThat(balanceOrError.hasError()).isTrue();
+            BalanceRequestError error = balanceOrError.getError();
+            assertThat(error.getErrorMessage()).isEqualTo(ErrorMessage.ACCOUNT_BLOCKED);
+        }
+
+        @Test
+        @DisplayName("Request without JWT token should be rejected")
+        void balanceTest_withoutToken() {
+            //given
+            int accountNumber = 33;
+            BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
+                    .setAccountNumber(accountNumber)
+                    .build();
+
+            //when
+            ThrowableAssert.ThrowingCallable exec = () -> {
+                BalanceResponse balanceOrError = blockingStub
+                        .getBalanceOrError(balanceCheckRequest);
+                Balance balance = balanceOrError.getBalance();
+                log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
+            };
+
+            //then
+            assertThatThrownBy(exec).isInstanceOf(StatusRuntimeException.class)
+                    .hasMessage("UNAUTHENTICATED: invalid/expired token");
+        }
+
+        @ParameterizedTest
+        @DisplayName("Request with INVALID token should be rejected")
+        @ValueSource(strings = {
+                "user-token-33:absent-role",
+                "wrong format",
+                "wrong-format:standard",
+                "user-token-k:standard",
+                "user-token-321:standard", //absent
+                "user-token- 1:standard"
+        })
+        void balanceTest_invalidToken(String token) {
+            //given
+            int accountNumber = 33;
+            BalanceCheckRequest balanceCheckRequest = BalanceCheckRequest.newBuilder()
+                    .setAccountNumber(accountNumber)
+                    .build();
+
+            //when
+            ThrowableAssert.ThrowingCallable exec = () -> {
+                BalanceResponse balanceOrError = blockingStub
+                        .withCallCredentials(new UserSessionToken(token))
+                        .getBalanceOrError(balanceCheckRequest);
+                Balance balance = balanceOrError.getBalance();
+                log.debug("Received balance: {} for user {}", balance.getAmount(), accountNumber);
+                assertEquals(accountNumber * 111, balance.getAmount());
+            };
+
+            //then
+            assertThatThrownBy(exec).isInstanceOf(StatusRuntimeException.class)
+                    .hasMessage("UNAUTHENTICATED: invalid/expired token");
+        }
+    }
 }

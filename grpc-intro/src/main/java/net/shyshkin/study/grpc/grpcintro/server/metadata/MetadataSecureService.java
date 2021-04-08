@@ -15,6 +15,7 @@ import net.shyshkin.study.grpc.grpcintro.server.rpctypes.DepositStreamObserver;
 @RequiredArgsConstructor
 public class MetadataSecureService extends BankServiceGrpc.BankServiceImplBase {
 
+    public static final int FAKE_BLOCKED_ACCOUNT_ID = 99;
     private final AccountDatabase accountDatabase;
 
     @Override
@@ -39,6 +40,36 @@ public class MetadataSecureService extends BankServiceGrpc.BankServiceImplBase {
         return Balance.newBuilder()
                 .setAmount(amount)
                 .build();
+    }
+
+    @Override
+    public void getBalanceOrError(BalanceCheckRequest request, StreamObserver<BalanceResponse> responseObserver) {
+
+        int accountNumber = request.getAccountNumber();
+
+        BalanceResponse.Builder responseBuilder = BalanceResponse.newBuilder();
+        BalanceRequestError.Builder errorBuilder = BalanceRequestError.newBuilder()
+                .setAmount(-1);
+
+        if (!accountDatabase.accountPresent(accountNumber)) {
+            errorBuilder.setErrorMessage(ErrorMessage.ACCOUNT_ABSENT);
+            responseBuilder.setError(errorBuilder);
+        } else if (ServerConstants.CTX_USER_ID.get() == FAKE_BLOCKED_ACCOUNT_ID) {
+            errorBuilder.setErrorMessage(ErrorMessage.ACCOUNT_BLOCKED);
+            responseBuilder.setError(errorBuilder);
+        } else {
+            UserRole userRole = ServerConstants.CTX_USER_ROLE.get(); //Like TreadLocal - only current thread can store and retrieve key
+
+            if (UserRole.PRIME.equals(userRole) || ServerConstants.CTX_USER_ID.get() == accountNumber) {
+                Balance balance = retrieveBalanceFromDB(accountNumber);
+                responseBuilder.setBalance(balance);
+            } else {
+                errorBuilder.setErrorMessage(ErrorMessage.PERMISSION_DENIED);
+                responseBuilder.setError(errorBuilder);
+            }
+        }
+        responseObserver.onNext(responseBuilder.build());
+        responseObserver.onCompleted();
     }
 
     @Override

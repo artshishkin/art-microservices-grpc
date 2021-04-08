@@ -28,8 +28,12 @@ message DepositRequest{
 }
 
 enum ErrorMessage{
-  ONLY_TEN_MULTIPLE = 0;
-  INSUFFICIENT_BALANCE = 1;
+  UNKNOWN = 0;
+  ONLY_TEN_MULTIPLE = 1;
+  INSUFFICIENT_BALANCE = 2;
+  ACCOUNT_ABSENT = 3;
+  ACCOUNT_BLOCKED = 4;
+  PERMISSION_DENIED = 5;
 }
 
 message WithdrawalError{
@@ -37,10 +41,23 @@ message WithdrawalError{
   int32 amount = 2;
 }
 
+message BalanceRequestError{
+  ErrorMessage error_message = 1;
+  int32 amount = 2;
+}
+
+message BalanceResponse{
+  oneof response{
+    Balance balance = 1;
+    BalanceRequestError error = 2;
+  }
+}
+
 service BankService{
 
   //unary
   rpc getBalance(BalanceCheckRequest) returns (Balance);
+  rpc getBalanceOrError(BalanceCheckRequest) returns (BalanceResponse);
 
   //server-side streaming
   rpc withdraw(WithdrawRequest) returns (stream Money);
