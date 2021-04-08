@@ -1,24 +1,27 @@
 package net.shyshkin.study.grpc.grpcintro.client.ssl;
 
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
+import io.grpc.*;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import lombok.extern.slf4j.Slf4j;
 import net.shyshkin.study.grpc.grpcintro.models.Balance;
 import net.shyshkin.study.grpc.grpcintro.models.BalanceCheckRequest;
 import net.shyshkin.study.grpc.grpcintro.models.BankServiceGrpc;
+import net.shyshkin.study.grpc.grpcintro.server.rpctypes.AccountDatabase;
+import net.shyshkin.study.grpc.grpcintro.server.ssl.BankService;
 import org.assertj.core.api.ThrowableAssert;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 
 import static io.grpc.Status.UNAVAILABLE;
@@ -27,11 +30,46 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
-@Disabled("Only for manual testing")
-class SslManualClientTest {
+class SslAutoClientTest {
 
     private static BankServiceGrpc.BankServiceBlockingStub blockingStub;
     private ManagedChannel managedChannel;
+    private static Server server;
+
+    @BeforeAll
+    static void beforeAll() throws IOException {
+        AccountDatabase accountDatabase = new AccountDatabase();
+
+        Path sslDirectory = Path.of("./../ssl-tls/").toAbsolutePath().normalize();
+
+        File keyCertificateChainFile = sslDirectory.resolve("localhost.crt").toFile();
+//        File keyFile = sslDirectory.resolve("localhost.key").toFile();
+        File keyFile = sslDirectory.resolve("localhost.pem").toFile(); //for gRPC
+
+        SslContext sslContext = GrpcSslContexts.configure(
+                SslContextBuilder.forServer(keyCertificateChainFile, keyFile)
+        ).build();
+
+        server = NettyServerBuilder
+                .forPort(6363)
+                .sslContext(sslContext)
+                .addService(new BankService(accountDatabase))
+                .build();
+
+        // shutdown hook
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            log.debug("gRPC server is shutting down!");
+            server.shutdown();
+        }));
+
+        log.debug("gRPC server is starting!");
+        server.start();
+    }
+
+    @AfterAll
+    static void afterAll() {
+        server.shutdown();
+    }
 
     @AfterEach
     void tearDown() {
