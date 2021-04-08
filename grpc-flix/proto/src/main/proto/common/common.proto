@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package common;
+
+option java_multiple_files = true;
+option java_package = "net.shyshkin.study.grpc.grpcflix.common";
+
+enum Genre{
+  UNKNOWN = 0;
+  ACTION = 1;
+  FANTASY = 2;
+  COMEDY = 3;
+  ADULT = 4;
+  DRAMA = 5;
+  CRIME = 6;
+  WESTERN = 7;
+}
