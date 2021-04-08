@@ -2,7 +2,10 @@ package net.shyshkin.study.grpc.grpcflix.user.service;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import net.shyshkin.study.grpc.grpcflix.common.Genre;
+import net.shyshkin.study.grpc.grpcflix.user.UserGenreUpdateRequest;
 import net.shyshkin.study.grpc.grpcflix.user.UserResponse;
 import net.shyshkin.study.grpc.grpcflix.user.UserSearchRequest;
 import net.shyshkin.study.grpc.grpcflix.user.UserServiceGrpc;
@@ -97,4 +100,48 @@ class UserServiceTest {
                 .hasFieldOrPropertyWithValue("loginId", loginId)
                 .hasFieldOrPropertyWithValue("name", name);
     }
+
+
+    @Test
+    void updateUserGenre() {
+        //given
+        String loginId = "arina.climb";
+
+        //when
+        UserGenreUpdateRequest request = UserGenreUpdateRequest.newBuilder()
+                .setLoginId(loginId)
+                .setGenre(Genre.COMEDY)
+                .build();
+        UserResponse response = blockingStub.updateUserGenre(request);
+
+        //then
+        assertThat(response)
+                .hasFieldOrPropertyWithValue("genre", Genre.COMEDY)
+                .hasFieldOrPropertyWithValue("loginId", loginId)
+                .hasFieldOrPropertyWithValue("name", "Arina Shyshkina");
+    }
+
+    @Test
+    void updateUserGenre_absent() {
+        //given
+        String loginId = "absent.user";
+        UserGenreUpdateRequest request = UserGenreUpdateRequest.newBuilder()
+                .setLoginId(loginId)
+                .setGenre(Genre.COMEDY)
+                .build();
+
+        //when
+        ThrowableAssert.ThrowingCallable exec = () -> {
+            UserResponse response = blockingStub.updateUserGenre(request);
+        };
+
+        //then
+        assertThatThrownBy(exec)
+                .isInstanceOf(StatusRuntimeException.class)
+                .satisfies(ex -> assertThat(Status.fromThrowable(ex))
+                        .hasFieldOrPropertyWithValue("code", FAILED_PRECONDITION.getCode())
+                        .hasFieldOrPropertyWithValue("description", String.format("User with id `%s` not found", loginId))
+                );
+    }
+
 }

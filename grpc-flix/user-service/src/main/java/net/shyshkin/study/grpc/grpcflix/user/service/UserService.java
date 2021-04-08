@@ -54,6 +54,8 @@ public class UserService extends UserServiceGrpc.UserServiceImplBase {
             user.setGenre(genre.toString());
             userRepository.save(user);
             UserResponse userResponse = UserResponse.newBuilder()
+                    .setName(user.getName())
+                    .setLoginId(user.getLogin())
                     .setGenre(genre)
                     .build();
             responseObserver.onNext(userResponse);
