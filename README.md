@@ -204,4 +204,24 @@ message Person{
     -  **SO**
     -  `server 172.22.0.1:6565;` - **works**
     -  `server host.docker.internal:6365;`
--  **host.docker.internal**           
+-  **host.docker.internal**
+
+####  Section 12: SSL / TLS
+
+-  [OpenSSL Certificate Authority](https://jamielinux.com/docs/openssl-certificate-authority/index.html)
+
+#####  127. SSL/TLS - Becoming CA
+
+Become Certificate Authority
+
+-  create a private key first for CA (des3 is encryption standard)
+    -  `openssl genrsa -des3 -out ca.key.pem 2048`
+    -  Enter pass phrase for ca.key.pem: `admin`
+    -  Created `ca.key.pem` - private CA key file
+-  create ca certificate (This certificate is used to sign the server certificate and client will use this later)  
+    -  `openssl req -x509 -new -nodes -key ca.key.pem -sha256 -days 365 -out ca.cert.pem`
+    -  Country Name (2 letter code) [AU]:  -  skip all (just press enter)
+    -  Created `ca.cert.pem`
+    
+
+           
