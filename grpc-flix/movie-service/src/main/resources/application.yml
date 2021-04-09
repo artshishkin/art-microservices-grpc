@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: movie-service
+grpc:
+  server:
+    port: 7575
