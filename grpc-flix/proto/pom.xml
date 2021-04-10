@@ -13,6 +13,7 @@
 
     <properties>
         <grpc.version>1.32.1</grpc.version>
+        <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
     </properties>
 
     <dependencies>
