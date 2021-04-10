@@ -11,3 +11,6 @@ server:
 spring:
   application:
     name: aggregator-service
+logging:
+  level:
+    net.shyshkin: debug
