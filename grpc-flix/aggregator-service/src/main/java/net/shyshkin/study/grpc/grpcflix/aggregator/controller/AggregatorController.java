@@ -23,7 +23,7 @@ public class AggregatorController {
         return userMovieService.getRecommendedMovies(loginId);
     }
 
-    @PutMapping("user/{loginId}")
+    @PutMapping("user/{loginId:.+}")
     public UserDto updateUserGenre(@PathVariable String loginId, @RequestBody UserGenre userGenre) {
         return userMovieService.updateUserGenre(loginId, userGenre.getGenre());
     }

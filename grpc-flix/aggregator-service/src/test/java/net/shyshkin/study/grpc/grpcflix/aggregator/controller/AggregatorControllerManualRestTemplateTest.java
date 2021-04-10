@@ -3,6 +3,7 @@ package net.shyshkin.study.grpc.grpcflix.aggregator.controller;
 import net.shyshkin.study.grpc.grpcflix.aggregator.dto.RecommendedMovie;
 import net.shyshkin.study.grpc.grpcflix.aggregator.dto.UserDto;
 import net.shyshkin.study.grpc.grpcflix.aggregator.dto.UserGenre;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("Start movie-service and user-service before invoking this test")
-//@Disabled("Only for manual testing")
+@Disabled("Only for manual testing")
 class AggregatorControllerManualRestTemplateTest {
 
     @Autowired
