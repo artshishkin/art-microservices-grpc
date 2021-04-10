@@ -1,6 +1,10 @@
 grpc:
   server:
     port: 6565
+    security:
+      enabled: true
+      certificate-chain: file:C:\Users\Admin\IdeaProjects\Study\VinothSelvaraj\art-microservices-grpc\ssl-tls\localhost.crt
+      private-key: file:C:\Users\Admin\IdeaProjects\Study\VinothSelvaraj\art-microservices-grpc\ssl-tls\localhost.pem
 spring:
   application:
     name: user-service

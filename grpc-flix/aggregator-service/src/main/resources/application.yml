@@ -2,7 +2,9 @@ grpc:
   client:
     user-service:
       address: static://localhost:6565
-      negotiationType: plaintext
+      negotiationType: TLS
+      security:
+        trustCertCollection: file:C:\Users\Admin\IdeaProjects\Study\VinothSelvaraj\art-microservices-grpc\ssl-tls\ca.cert.pem
     movie-service:
       address: static://localhost:7575
       negotiationType: plaintext
